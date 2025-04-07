@@ -12,10 +12,10 @@ This is a minimal prototype for an alternative control system for Mortal Online 
 
 ## Showcase 
 ### Speed
-[![Speed Demo](https://img.youtube.com/vi/Vz8Ny_bGD6U/hqdefault.jpg)](https://youtu.be/Vz8Ny_bGD6U)
+[![Speed Demo](https://img.youtube.com/vi/kpWCWBBhcv0/hqdefault.jpg)](https://youtu.be/kpWCWBBhcv0)
 
 ### Swapping attacks
-[![Swapping Demo](https://img.youtube.com/vi/qFaCJOai8eY/hqdefault.jpg)](https://www.youtube.com/watch?v=qFaCJOai8eY)
+[![Swapping Demo](https://img.youtube.com/vi/zsD-gLbEgz8/hqdefault.jpg)](https://www.youtube.com/watch?v=zsD-gLbEgz8)
 
 ## Quickstart
 - install driver and tool (see below)
