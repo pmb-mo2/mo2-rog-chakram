@@ -10,6 +10,22 @@ This is a minimal prototype for an alternative control system for Mortal Online 
 - Chakram X mouse with joystick in analog mode
 - Mortal Online 2
 
+## Showcase 
+### Speed
+<video src="https://raw.githubusercontent.com/pmb-mo2/mo2-rog-chakram/main/demo/speed.mp4" controls width="400"></video>
+
+### Swapping attacks
+<video src="https://raw.githubusercontent.com/pmb-mo2/mo2-rog-chakram/main/demo/change.mp4" controls width="400"></video
+## Quickstart
+- install driver and tool (see below)
+- start tool
+- start MO2
+- set attack style = movement keys
+- set attack buttons to arrows
+- enable 'button charges attack'
+- run tool
+- enjoy!
+
 ## Installation
 
 1. Clone this repository or download the files
@@ -83,10 +99,10 @@ python run.py --headless --joystick 1
 
 The application divides the 360-degree joystick field into 4 sectors, each corresponding to one of the 4 attack directions in Mortal Online 2:
 
-- **Overhead** (Left sector, 225° to 315°): Key "1"
-- **Right** (Top sector, 315° to 45°): Key "2"
-- **Thrust** (Right sector, 45° to 135°): Key "3"
-- **Left** (Bottom sector, 135° to 225°): Key "4"
+- **Overhead** (Left sector, 225° to 315°): Key "Up"
+- **Right** (Top sector, 315° to 45°): Key "Right"
+- **Thrust** (Right sector, 45° to 135°): Key "Down"
+- **Left** (Bottom sector, 135° to 225°): Key "Left"
 
 The cancel button is mapped to the middle mouse button by default.
 
