@@ -1,0 +1,6 @@
+pygame==2.1.2
+pydirectinput==1.0.4
+interception-python==1.1.0
+# pydirectinput==1.0.4 (replaced with Windows API SendInput via ctypes)
+# pynput==1.7.6 (replaced with pydirectinput, then with Windows API)
+# ctypes is part of the Python standard library, no need to install
