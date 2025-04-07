@@ -12,10 +12,11 @@ This is a minimal prototype for an alternative control system for Mortal Online 
 
 ## Showcase 
 ### Speed
-<video src="https://raw.githubusercontent.com/pmb-mo2/mo2-rog-chakram/main/demo/speed.mp4" controls width="400"></video>
+[![Speed Demo](https://img.youtube.com/vi/Vz8Ny_bGD6U/hqdefault.jpg)](https://youtu.be/Vz8Ny_bGD6U)
 
 ### Swapping attacks
-<video src="https://raw.githubusercontent.com/pmb-mo2/mo2-rog-chakram/main/demo/change.mp4" controls width="400"></video
+[![Swapping Demo](https://img.youtube.com/vi/qFaCJOai8eY/hqdefault.jpg)](https://www.youtube.com/watch?v=qFaCJOai8eY)
+
 ## Quickstart
 - install driver and tool (see below)
 - start tool
