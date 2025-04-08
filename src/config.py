@@ -8,7 +8,7 @@ import json
 # Default configuration values
 
 # Joystick deadzone (0.0 to 1.0)
-DEFAULT_DEADZONE = 0.2
+DEFAULT_DEADZONE = 0.01
 
 # Speed threshold for quick movement through deadzone (units per second)
 DEFAULT_DEADZONE_SPEED_THRESHOLD = 0.05

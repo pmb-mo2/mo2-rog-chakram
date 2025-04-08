@@ -521,35 +521,80 @@ class ChakramController:
         current_position = self.get_joystick_position()
         angle, distance = self.get_joystick_angle_and_distance()
         
-        # Track deadzone entry and exit
+        # Track deadzone entry and exit - use hysteresis to prevent flickering
         was_in_deadzone = self.in_deadzone
-        self.in_deadzone = distance < DEADZONE
         
-        # Calculate movement speed only when needed
-        if (self.in_deadzone and not was_in_deadzone) or (not self.in_deadzone and was_in_deadzone):
-            # Calculate movement speed
-            movement_speed = self.calculate_movement_speed(
-                self.last_position, current_position, 
-                self.last_position_time, current_time
-            )
+        # Use different thresholds for entering and exiting deadzone (hysteresis)
+        entry_threshold = DEADZONE  # Standard threshold for entering deadzone
+        exit_threshold = DEADZONE * 1.1  # 10% larger threshold for exiting deadzone
+        
+        # Determine if we're in the deadzone with hysteresis
+        if was_in_deadzone:
+            # If we were in deadzone, use the exit threshold (must exceed this to exit)
+            self.in_deadzone = distance < exit_threshold
+        else:
+            # If we weren't in deadzone, use the entry threshold
+            self.in_deadzone = distance < entry_threshold
+        
+        # Add time-based debouncing to prevent rapid toggling
+        current_time = time.time()
+        min_state_time = 0.05  # Minimum time (in seconds) to stay in a state
+        
+        # If we just changed state but haven't been in the state long enough, revert to previous state
+        if was_in_deadzone != self.in_deadzone:
+            if was_in_deadzone:
+                # We're trying to exit deadzone
+                if current_time - self.deadzone_entry_time < min_state_time:
+                    # Revert to deadzone state if we haven't been in it long enough
+                    self.in_deadzone = True
+                    print(f"Debouncing: Prevented rapid exit from deadzone")
+            else:
+                # We're trying to enter deadzone
+                if self.deadzone_exit_time > 0 and current_time - self.deadzone_exit_time < min_state_time:
+                    # Revert to non-deadzone state if we just exited it
+                    self.in_deadzone = False
+                    print(f"Debouncing: Prevented rapid re-entry to deadzone")
+        
+        # Calculate movement speed for all frames to get more accurate readings
+        movement_speed = self.calculate_movement_speed(
+            self.last_position, current_position, 
+            self.last_position_time, current_time
+        )
+        
+        # Store the speed for use in deadzone exit logic
+        if self.in_deadzone:
+            # Update the speed while in deadzone to get the most recent value
+            self.deadzone_speed = movement_speed
         
         # If we just entered the deadzone
         if self.in_deadzone and not was_in_deadzone:
             self.deadzone_entry_time = current_time
             self.deadzone_entry_position = current_position
-            print(f"Entered deadzone at {current_time:.3f}")
+            print(f"Entered deadzone at {current_time:.3f}, speed: {movement_speed:.3f}")
+            
+            # When entering deadzone, always release all keys and reset state
+            self.release_all_keys()
+            print("Entering neutral state, released all keys")
+            
+            # Update state
+            self.current_sector = None
+            self.current_state = "neutral"
+            
+            # Always reset sector change flag when entering deadzone
+            self.sector_change_in_progress = False
+            
+            # Update tracking variables for next iteration
+            self.last_position = current_position
+            self.last_position_time = current_time
+            return
         
         # If we just exited the deadzone
         if not self.in_deadzone and was_in_deadzone:
             self.deadzone_exit_time = current_time
             self.deadzone_exit_position = current_position
             
-            # Calculate speed through deadzone
-            self.deadzone_speed = self.calculate_movement_speed(
-                self.deadzone_entry_position, self.deadzone_exit_position,
-                self.deadzone_entry_time, self.deadzone_exit_time
-            )
-            
+            # Calculate speed through deadzone - use the most recent speed measurement
+            # This is more reliable than calculating based on entry/exit positions
             print(f"Exited deadzone at {current_time:.3f}, speed: {self.deadzone_speed:.3f}")
             
             # Always reset sector change flag when exiting deadzone to ensure responsiveness
@@ -558,11 +603,16 @@ class ChakramController:
         
         # If we've been in the deadzone for too long, force reset the sector change flag
         # This prevents getting stuck in the deadzone
-        if self.in_deadzone and (current_time - self.deadzone_entry_time) > self.deadzone_timeout:
-            # Only log and reset if the flag is currently set to true
-            if self.sector_change_in_progress:
-                print(f"Deadzone timeout reached ({self.deadzone_timeout}s). Forcing reset of sector_change_in_progress flag.")
-                self.sector_change_in_progress = False
+        if self.in_deadzone:
+            # Always reset the flag periodically while in deadzone
+            current_deadzone_time = current_time - self.deadzone_entry_time
+            if current_deadzone_time > self.deadzone_timeout:
+                # Reset the flag and update the entry time to prevent continuous resets
+                if self.sector_change_in_progress:
+                    print(f"Deadzone timeout reached ({self.deadzone_timeout}s). Forcing reset of sector_change_in_progress flag.")
+                    self.sector_change_in_progress = False
+                    # Update the entry time to prevent continuous resets
+                    self.deadzone_entry_time = current_time
         
         # If alt mode is active, handle it differently
         if self.alt_mode_active:
@@ -609,16 +659,9 @@ class ChakramController:
         
         # Process state changes and button presses
         state_changed = False
-        
-        # First, check if we're entering the neutral state (deadzone)
-        if new_state == "neutral" and self.current_state != "neutral":
-            # If we're going to neutral state, release all keys
-            self.release_all_keys()
-            print("Entering neutral state, released all keys")
-            state_changed = True
-            
-        # Check for cancel button press in any state
         cancel_pressed = False
+        
+        # Check for cancel button press in any state
         try:
             # Check if joystick has buttons
             if self.joystick and self.joystick.get_numbuttons() > 0:
@@ -725,6 +768,22 @@ class ChakramController:
         old_attack_key = KEY_MAPPINGS[old_sector]
         new_attack_key = KEY_MAPPINGS[new_sector]
         
+        # First, check if we're still in a valid state to perform the sector change
+        # This prevents issues when the joystick has moved back to deadzone during processing
+        current_position = self.get_joystick_position()
+        angle, distance = self.get_joystick_angle_and_distance()
+        
+        # If we've moved back to deadzone, cancel the sector change
+        if distance < DEADZONE:
+            print("Canceling sector change - returned to deadzone")
+            self.sector_change_in_progress = False
+            
+            # Release any pressed keys
+            if old_attack_key in self.pressed_keys:
+                self.release_key(old_attack_key)
+            
+            return
+        
         try:
             # Use the Windows API to send a precise sector change sequence
             # This is now a direct, atomic operation with no delays
@@ -752,7 +811,9 @@ class ChakramController:
             if old_attack_key in self.pressed_keys:
                 self.release_key(old_attack_key)
             
-            self.press_key(new_attack_key)
+            # Only press the new attack key if we're still outside the deadzone
+            if distance >= DEADZONE:
+                self.press_key(new_attack_key)
     
     def check_alt_mode_key(self):
         """Check if the alt mode key is pressed."""
