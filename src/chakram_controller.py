@@ -9,7 +9,7 @@ import time
 import queue
 import pygame
 from src.win_input import key_down, key_up, send_sector_change, right_mouse_down, right_mouse_up, move_mouse, get_cursor_position
-from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, ALT_MODE_KEY, ALT_MODE_CURSOR_OFFSET
+from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_TIME_THRESHOLD, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, ALT_MODE_KEY, ALT_MODE_CURSOR_OFFSET
 
 class ChakramController:
     def __init__(self):
@@ -521,39 +521,12 @@ class ChakramController:
         current_position = self.get_joystick_position()
         angle, distance = self.get_joystick_angle_and_distance()
         
-        # Track deadzone entry and exit - use hysteresis to prevent flickering
+        # Simplified deadzone detection - use a direct approach
         was_in_deadzone = self.in_deadzone
         
-        # Use different thresholds for entering and exiting deadzone (hysteresis)
-        entry_threshold = DEADZONE  # Standard threshold for entering deadzone
-        exit_threshold = DEADZONE * 1.1  # 10% larger threshold for exiting deadzone
-        
-        # Determine if we're in the deadzone with hysteresis
-        if was_in_deadzone:
-            # If we were in deadzone, use the exit threshold (must exceed this to exit)
-            self.in_deadzone = distance < exit_threshold
-        else:
-            # If we weren't in deadzone, use the entry threshold
-            self.in_deadzone = distance < entry_threshold
-        
-        # Add time-based debouncing to prevent rapid toggling
-        current_time = time.time()
-        min_state_time = 0.05  # Minimum time (in seconds) to stay in a state
-        
-        # If we just changed state but haven't been in the state long enough, revert to previous state
-        if was_in_deadzone != self.in_deadzone:
-            if was_in_deadzone:
-                # We're trying to exit deadzone
-                if current_time - self.deadzone_entry_time < min_state_time:
-                    # Revert to deadzone state if we haven't been in it long enough
-                    self.in_deadzone = True
-                    print(f"Debouncing: Prevented rapid exit from deadzone")
-            else:
-                # We're trying to enter deadzone
-                if self.deadzone_exit_time > 0 and current_time - self.deadzone_exit_time < min_state_time:
-                    # Revert to non-deadzone state if we just exited it
-                    self.in_deadzone = False
-                    print(f"Debouncing: Prevented rapid re-entry to deadzone")
+        # Direct deadzone check - no hysteresis or debouncing
+        # This makes the deadzone more responsive and predictable
+        self.in_deadzone = distance < DEADZONE
         
         # Calculate movement speed for all frames to get more accurate readings
         movement_speed = self.calculate_movement_speed(
@@ -566,53 +539,34 @@ class ChakramController:
             # Update the speed while in deadzone to get the most recent value
             self.deadzone_speed = movement_speed
         
+        # SIMPLIFIED DEADZONE LOGIC
         # If we just entered the deadzone
         if self.in_deadzone and not was_in_deadzone:
             self.deadzone_entry_time = current_time
-            self.deadzone_entry_position = current_position
-            print(f"Entered deadzone at {current_time:.3f}, speed: {movement_speed:.3f}")
+            print(f"Entered deadzone at {current_time:.3f}")
             
-            # When entering deadzone, always release all keys and reset state
-            self.release_all_keys()
-            print("Entering neutral state, released all keys")
-            
-            # Update state
-            self.current_sector = None
-            self.current_state = "neutral"
-            
-            # Always reset sector change flag when entering deadzone
+            # Reset sector change flag when entering deadzone
             self.sector_change_in_progress = False
+        
+        # If we're in the deadzone, check how long we've been there
+        if self.in_deadzone:
+            deadzone_time = current_time - self.deadzone_entry_time
             
-            # Update tracking variables for next iteration
-            self.last_position = current_position
-            self.last_position_time = current_time
-            return
+            # If we've been in the deadzone for longer than the threshold, release attack buttons
+            if deadzone_time >= DEADZONE_TIME_THRESHOLD and len(self.pressed_keys) > 0:
+                print(f"In deadzone for {deadzone_time:.3f}s, releasing all attack keys")
+                self.release_all_keys()
+                
+                # Update state
+                self.current_sector = None
+                self.current_state = "neutral"
         
         # If we just exited the deadzone
         if not self.in_deadzone and was_in_deadzone:
-            self.deadzone_exit_time = current_time
-            self.deadzone_exit_position = current_position
+            print(f"Exited deadzone at {current_time:.3f}")
             
-            # Calculate speed through deadzone - use the most recent speed measurement
-            # This is more reliable than calculating based on entry/exit positions
-            print(f"Exited deadzone at {current_time:.3f}, speed: {self.deadzone_speed:.3f}")
-            
-            # Always reset sector change flag when exiting deadzone to ensure responsiveness
-            print("Resetting sector_change_in_progress flag on deadzone exit")
+            # Reset sector change flag when exiting deadzone
             self.sector_change_in_progress = False
-        
-        # If we've been in the deadzone for too long, force reset the sector change flag
-        # This prevents getting stuck in the deadzone
-        if self.in_deadzone:
-            # Always reset the flag periodically while in deadzone
-            current_deadzone_time = current_time - self.deadzone_entry_time
-            if current_deadzone_time > self.deadzone_timeout:
-                # Reset the flag and update the entry time to prevent continuous resets
-                if self.sector_change_in_progress:
-                    print(f"Deadzone timeout reached ({self.deadzone_timeout}s). Forcing reset of sector_change_in_progress flag.")
-                    self.sector_change_in_progress = False
-                    # Update the entry time to prevent continuous resets
-                    self.deadzone_entry_time = current_time
         
         # If alt mode is active, handle it differently
         if self.alt_mode_active:
@@ -785,19 +739,22 @@ class ChakramController:
             return
         
         try:
-            # Use the Windows API to send a precise sector change sequence
-            # This is now a direct, atomic operation with no delays
-            send_sector_change(cancel_key, old_attack_key, new_attack_key, 0)
+            # SIMPLIFIED APPROACH: Use individual key operations for maximum reliability
+            # This is more reliable than the atomic operation in some cases
             
-            # Update the pressed keys set
+            # 1. Press cancel key
+            self.press_key(cancel_key)
+            
+            # 2. Release old attack key
             if old_attack_key in self.pressed_keys:
-                self.pressed_keys.remove(old_attack_key)
-                self._log_key_action(old_attack_key, True, batch=True)
+                self.release_key(old_attack_key)
             
-            self.pressed_keys.add(new_attack_key)
-            self._log_key_action(cancel_key, False, batch=True)
-            self._log_key_action(cancel_key, True, batch=True)
-            self._log_key_action(new_attack_key, False, batch=True)
+            # 3. Release cancel key (after a very short delay)
+            time.sleep(0.01)  # 10ms delay
+            self.release_key(cancel_key)
+            
+            # 4. Press new attack key
+            self.press_key(new_attack_key)
             
             # Immediately mark the sector change as complete
             self.sector_change_in_progress = False

@@ -8,7 +8,10 @@ import json
 # Default configuration values
 
 # Joystick deadzone (0.0 to 1.0)
-DEFAULT_DEADZONE = 0.01
+DEFAULT_DEADZONE = 0.15
+
+# Time threshold for deadzone (in seconds) - how long to stay in deadzone before releasing attack
+DEFAULT_DEADZONE_TIME_THRESHOLD = 0.05  # 10ms default
 
 # Speed threshold for quick movement through deadzone (units per second)
 DEFAULT_DEADZONE_SPEED_THRESHOLD = 0.05
@@ -82,6 +85,7 @@ def load_user_config():
             # Return the user's configuration
             return {
                 "deadzone": user_config.get("deadzone", DEFAULT_DEADZONE),
+                "deadzone_time_threshold": user_config.get("deadzone_time_threshold", DEFAULT_DEADZONE_TIME_THRESHOLD),
                 "deadzone_speed_threshold": user_config.get("deadzone_speed_threshold", DEFAULT_DEADZONE_SPEED_THRESHOLD),
                 "release_delay": user_config.get("release_delay", DEFAULT_RELEASE_DELAY),
                 "sector_change_cooldown": user_config.get("sector_change_cooldown", DEFAULT_SECTOR_CHANGE_COOLDOWN),
@@ -97,6 +101,7 @@ def load_user_config():
     # Return the default configuration if the user's configuration couldn't be loaded
     return {
         "deadzone": DEFAULT_DEADZONE,
+        "deadzone_time_threshold": DEFAULT_DEADZONE_TIME_THRESHOLD,
         "deadzone_speed_threshold": DEFAULT_DEADZONE_SPEED_THRESHOLD,
         "release_delay": DEFAULT_RELEASE_DELAY,
         "sector_change_cooldown": DEFAULT_SECTOR_CHANGE_COOLDOWN,
@@ -110,6 +115,7 @@ user_config = load_user_config()
 
 # Set the configuration values
 DEADZONE = user_config["deadzone"]
+DEADZONE_TIME_THRESHOLD = user_config.get("deadzone_time_threshold", DEFAULT_DEADZONE_TIME_THRESHOLD)
 DEADZONE_SPEED_THRESHOLD = user_config.get("deadzone_speed_threshold", DEFAULT_DEADZONE_SPEED_THRESHOLD)
 RELEASE_DELAY = user_config["release_delay"]
 SECTOR_CHANGE_COOLDOWN = user_config.get("sector_change_cooldown", DEFAULT_SECTOR_CHANGE_COOLDOWN)
