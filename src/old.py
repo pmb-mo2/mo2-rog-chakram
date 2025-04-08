@@ -8,8 +8,8 @@ import threading
 import time
 import queue
 import pygame
-from src.win_input import key_down, key_up, send_sector_change, right_mouse_down, right_mouse_up, move_mouse, get_cursor_position
-from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, ALT_MODE_KEY, ALT_MODE_CURSOR_OFFSET
+from src.win_input import key_down, key_up, send_sector_change
+from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN
 
 class ChakramController:
     def __init__(self):
@@ -43,12 +43,6 @@ class ChakramController:
         self.deadzone_exit_position = (0, 0)
         self.deadzone_speed = 0
         
-        # Alternative mode
-        self.alt_mode_active = False
-        self.alt_mode_key_pressed = False
-        self.alt_mode_current_sector = None
-        self.alt_mode_right_mouse_down = False
-        
         # Debug info
         self.debug_info = {
             "position": (0, 0),
@@ -58,15 +52,8 @@ class ChakramController:
             "state": None,
             "pressed_keys": [],
             "deadzone_speed": 0,
-            "quick_movement": False,
-            "alt_mode_active": False,
-            "alt_mode_sector": None
+            "quick_movement": False
         }
-        
-        # Safety mechanism to prevent infinite loops
-        self.last_update_time = time.time()
-        self.deadzone_timeout = 0.5  # Timeout in seconds to force exit from deadzone
-        self.sector_change_timeout = 0.2  # Timeout for sector change operations
     
     def initialize(self, joystick_id=None):
         """
@@ -382,140 +369,10 @@ class ChakramController:
         
         return speed
     
-    
-    def handle_alt_mode(self, angle, distance):
-        """Handle the alternative mode functionality."""
-        # Determine sector
-        new_sector = self.get_current_sector(angle, distance)
-        
-        # Update debug info
-        self.debug_info["alt_mode_active"] = True
-        self.debug_info["alt_mode_sector"] = new_sector
-        
-        # Update position, angle, and distance in debug info
-        current_position = self.get_joystick_position()
-        self.debug_info["position"] = current_position
-        self.debug_info["angle"] = angle
-        self.debug_info["distance"] = distance
-        self.debug_info["sector"] = new_sector
-        
-        # If in deadzone, release right mouse button and reset sector
-        if distance < DEADZONE:
-            if self.alt_mode_right_mouse_down:
-                right_mouse_up()
-                self.alt_mode_right_mouse_down = False
-                print("Alt mode: Released right mouse button (returned to deadzone)")
-            
-            self.alt_mode_current_sector = None
-            return
-        
-        # If we have a new sector
-        if new_sector:
-            # If we're changing from one sector to another
-            if self.alt_mode_current_sector is not None and new_sector != self.alt_mode_current_sector:
-                # Release right mouse button
-                if self.alt_mode_right_mouse_down:
-                    right_mouse_up()
-                    self.alt_mode_right_mouse_down = False
-                    print(f"Alt mode: Released right mouse button (sector change: {self.alt_mode_current_sector} -> {new_sector})")
-                
-                # Move cursor in the new direction
-                self.move_cursor_in_direction(new_sector)
-                
-                # Press right mouse button again
-                right_mouse_down()
-                self.alt_mode_right_mouse_down = True
-                print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
-            
-            # If we're entering a sector from neutral
-            elif self.alt_mode_current_sector is None:
-                # Move cursor in the direction
-                self.move_cursor_in_direction(new_sector)
-                
-                # Press right mouse button
-                right_mouse_down()
-                self.alt_mode_right_mouse_down = True
-                print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
-            
-            # Update current sector
-            self.alt_mode_current_sector = new_sector
-    
-    def move_cursor_in_direction(self, sector):
-        """Move the cursor in the direction corresponding to the sector."""
-        # Get the cursor offset from config
-        offset = ALT_MODE_CURSOR_OFFSET
-        
-        # Determine direction based on sector name
-        # Move cursor in the direction corresponding to the sector:
-        # - right sector: move cursor right
-        # - left sector: move cursor left
-        # - overhead sector: move cursor up
-        # - thrust sector: move cursor down
-        if sector == "right":
-            dx, dy = offset, 0
-            print(f"Alt mode: Moved cursor right by {offset}px (sector: {sector})")
-        elif sector == "left":
-            dx, dy = -offset, 0
-            print(f"Alt mode: Moved cursor left by {offset}px (sector: {sector})")
-        elif sector == "overhead":
-            dx, dy = 0, -offset
-            print(f"Alt mode: Moved cursor up by {offset}px (sector: {sector})")
-        elif sector == "thrust":
-            dx, dy = 0, offset
-            print(f"Alt mode: Moved cursor down by {offset}px (sector: {sector})")
-        else:
-            return  # Unknown sector
-        
-        # Move the cursor
-        move_mouse(dx, dy)
-    
-    def exit_alt_mode(self):
-        """Clean up when exiting alternative mode."""
-        # Release right mouse button if it's down
-        if self.alt_mode_right_mouse_down:
-            right_mouse_up()
-            self.alt_mode_right_mouse_down = False
-            print("Alt mode: Released right mouse button (exiting alt mode)")
-        
-        # Reset alt mode state
-        self.alt_mode_current_sector = None
-    
     def update(self):
         """Update the controller state and simulate key presses."""
         # Get current time
         current_time = time.time()
-        
-        # Safety mechanism to prevent infinite loops or getting stuck
-        time_since_last_update = current_time - self.last_update_time
-        self.last_update_time = current_time
-        
-        # Check if alt mode key is pressed
-        alt_key_pressed = self.check_alt_mode_key()
-        
-        # Handle alt mode activation/deactivation
-        if alt_key_pressed and not self.alt_mode_key_pressed:
-            # Alt key just pressed - activate alt mode
-            self.alt_mode_active = True
-            self.alt_mode_key_pressed = True
-            print("Alternative mode activated")
-            
-            # Release all keys from standard mode
-            self.release_all_keys()
-            
-            # Reset sector change flag to prevent getting stuck
-            self.sector_change_in_progress = False
-            
-        elif not alt_key_pressed and self.alt_mode_key_pressed:
-            # Alt key just released - deactivate alt mode
-            self.alt_mode_active = False
-            self.alt_mode_key_pressed = False
-            print("Alternative mode deactivated")
-            
-            # Clean up alt mode
-            self.exit_alt_mode()
-            
-            # Reset sector change flag to prevent getting stuck
-            self.sector_change_in_progress = False
         
         # Get joystick position, angle, and distance
         current_position = self.get_joystick_position()
@@ -537,7 +394,6 @@ class ChakramController:
         if self.in_deadzone and not was_in_deadzone:
             self.deadzone_entry_time = current_time
             self.deadzone_entry_position = current_position
-            print(f"Entered deadzone at {current_time:.3f}")
         
         # If we just exited the deadzone
         if not self.in_deadzone and was_in_deadzone:
@@ -550,30 +406,10 @@ class ChakramController:
                 self.deadzone_entry_time, self.deadzone_exit_time
             )
             
-            print(f"Exited deadzone at {current_time:.3f}, speed: {self.deadzone_speed:.3f}")
-            
-            # Always reset sector change flag when exiting deadzone to ensure responsiveness
-            print("Resetting sector_change_in_progress flag on deadzone exit")
-            self.sector_change_in_progress = False
+            # No cooldown after exiting deadzone for maximum responsiveness
+            # We'll rely on the minimal sector change cooldown to prevent double hits
+            pass
         
-        # If we've been in the deadzone for too long, force reset the sector change flag
-        # This prevents getting stuck in the deadzone
-        if self.in_deadzone and (current_time - self.deadzone_entry_time) > self.deadzone_timeout:
-            # Only log and reset if the flag is currently set to true
-            if self.sector_change_in_progress:
-                print(f"Deadzone timeout reached ({self.deadzone_timeout}s). Forcing reset of sector_change_in_progress flag.")
-                self.sector_change_in_progress = False
-        
-        # If alt mode is active, handle it differently
-        if self.alt_mode_active:
-            self.handle_alt_mode(angle, distance)
-            
-            # Update tracking variables for next iteration
-            self.last_position = current_position
-            self.last_position_time = current_time
-            return
-        
-        # Standard mode processing
         # Determine sector and state - only determine sector if outside deadzone
         new_sector = self.get_current_sector(angle, distance)
         new_state = self.get_current_state(new_sector, angle, distance)
@@ -590,60 +426,21 @@ class ChakramController:
         self.debug_info["pressed_keys"] = list(self.pressed_keys)
         self.debug_info["deadzone_speed"] = self.deadzone_speed
         self.debug_info["quick_movement"] = quick_movement
-        self.debug_info["alt_mode_active"] = self.alt_mode_active
-        self.debug_info["alt_mode_sector"] = self.alt_mode_current_sector
         
         # Skip processing if a sector change is already in progress
-        # But add a timeout to prevent getting stuck
+        # Note: We've removed the cooldown check for maximum responsiveness
         if self.sector_change_in_progress:
-            # Check if we've been stuck for too long
-            if time_since_last_update > self.sector_change_timeout:
-                print(f"Sector change taking too long ({time_since_last_update:.3f}s). Forcing reset.")
-                self.sector_change_in_progress = False
-                # Continue processing this frame instead of returning
-            else:
-                # Update tracking variables for next iteration
-                self.last_position = current_position
-                self.last_position_time = current_time
-                return
-        
-        # Process state changes and button presses
-        state_changed = False
+            # Update tracking variables for next iteration
+            self.last_position = current_position
+            self.last_position_time = current_time
+            return
         
         # First, check if we're entering the neutral state (deadzone)
         if new_state == "neutral" and self.current_state != "neutral":
             # If we're going to neutral state, release all keys
             self.release_all_keys()
-            print("Entering neutral state, released all keys")
-            state_changed = True
-            
-        # Check for cancel button press in any state
-        cancel_pressed = False
-        try:
-            # Check if joystick has buttons
-            if self.joystick and self.joystick.get_numbuttons() > 0:
-                # Check the first button (usually the main/cancel button)
-                if self.joystick.get_button(0):
-                    # Press and release the cancel key
-                    cancel_key = KEY_MAPPINGS["cancel"]
-                    self.press_key(cancel_key)
-                    # Release after a short delay
-                    time.sleep(0.05)
-                    self.release_key(cancel_key)
-                    print("Cancel button pressed")
-                    cancel_pressed = True
-                    
-                    # If we're in an attack state, also release the attack key
-                    if self.current_state == "attack" and self.current_sector:
-                        attack_key = KEY_MAPPINGS[self.current_sector]
-                        if attack_key in self.pressed_keys:
-                            self.release_key(attack_key)
-                            print(f"Released attack key {attack_key} due to cancel button press")
-        except Exception as e:
-            print(f"Error checking cancel button: {e}")
-            
-        # Handle sector changes (only if we're not in neutral state and cancel wasn't pressed)
-        if not cancel_pressed and new_sector != self.current_sector:
+        # Handle sector changes (only if we're not in neutral state)
+        elif new_sector != self.current_sector:
             # When crossing sector boundary:
             if self.current_sector is not None and new_sector is not None:
                 # If we've quickly moved through the deadzone, use atomic operation for maximum speed
@@ -690,7 +487,6 @@ class ChakramController:
                     # Set the sector change flag and update the last change time
                     self.sector_change_in_progress = True
                     self.last_sector_change_time = current_time
-                    print(f"Starting sector change: {self.current_sector} -> {new_sector}")
                     # Handle the sector change directly
                     self._enqueue_sector_change(self.current_sector, new_sector)
             elif new_state == "attack" and new_sector:
@@ -742,84 +538,99 @@ class ChakramController:
             
             # Immediately mark the sector change as complete
             self.sector_change_in_progress = False
-            print(f"Sector change completed: {old_sector} -> {new_sector}")
+            # Reset the cooldown timer to allow immediate next sector change
+            self.last_sector_change_time = 0
         except Exception as e:
             print(f"Error during sector change: {e}")
-            # Reset the sector change flag to prevent getting stuck
             self.sector_change_in_progress = False
-            
-            # Fallback to individual key operations if the atomic operation fails
-            if old_attack_key in self.pressed_keys:
-                self.release_key(old_attack_key)
-            
-            self.press_key(new_attack_key)
-    
-    def check_alt_mode_key(self):
-        """Check if the alt mode key is pressed."""
-        try:
-            # Import the optimized function for checking key state
-            from src.win_input import is_key_pressed
-            
-            # Check if the alt mode key is pressed
-            return is_key_pressed(ALT_MODE_KEY)
-        except Exception as e:
-            print(f"Error checking alt mode key: {e}")
-            return False
-    
-    def start(self):
-        """Start the controller."""
-        if self.thread is not None and self.thread.is_alive():
-            print("Controller is already running")
-            return
         
-        self.running = True
-        self.thread = threading.Thread(target=self._background_thread)
-        self.thread.daemon = True
-        self.thread.start()
-        
-        print("Controller started")
+        # Log the sector change for debugging
+        print(f"Executed sector change: {old_sector} -> {new_sector}")
     
-    def stop(self):
-        """Stop the controller."""
+    def _process_key_events(self):
+        """
+        Process key events from the queue with precise timing.
+        Optimized to process events individually for maximum compatibility.
+        """
+        from src.win_input import key_down, key_up
+        
+        while self.key_event_thread_running:
+            try:
+                # Get the next key event from the queue with a timeout
+                key, is_up, delay = self.key_event_queue.get(timeout=0.1)
+                
+                # If there's a delay, wait before processing
+                if delay > 0:
+                    time.sleep(delay)
+                
+                # Execute the key event
+                if is_up:
+                    # Key up event
+                    if key in self.pressed_keys:
+                        key_up(key)
+                        self.pressed_keys.remove(key)
+                        self._log_key_action(key, True, batch=True)
+                else:
+                    # Key down event
+                    if key not in self.pressed_keys:
+                        key_down(key)
+                        self.pressed_keys.add(key)
+                        self._log_key_action(key, False, batch=True)
+                
+                # Mark the task as done
+                self.key_event_queue.task_done()
+                
+                # Check if this was the last event in a sector change
+                if self.key_event_queue.empty() and self.sector_change_in_progress:
+                    self.sector_change_in_progress = False
+                    # Note: We don't reset the last_sector_change_time here to maintain the cooldown
+            except queue.Empty:
+                # No events in the queue, just continue
+                pass
+            except Exception as e:
+                print(f"Error processing key event: {e}")
+    
+    def start_background_thread(self):
+        """Start the background threads for continuous updates and key event processing."""
+        # Start the main update thread
+        if self.thread and self.thread.is_alive():
+            pass  # Already running
+        else:
+            self.running = True
+            self.thread = threading.Thread(target=self._background_thread)
+            self.thread.daemon = True
+            self.thread.start()
+        
+        # Start the key event processing thread
+        if self.key_event_thread and self.key_event_thread.is_alive():
+            pass  # Already running
+        else:
+            self.key_event_thread_running = True
+            self.key_event_thread = threading.Thread(target=self._process_key_events)
+            self.key_event_thread.daemon = True
+            self.key_event_thread.start()
+    
+    def stop_background_thread(self):
+        """Stop all background threads."""
+        # Stop the main update thread
         self.running = False
-        
-        if self.thread is not None:
+        if self.thread:
             self.thread.join(timeout=1.0)
-            self.thread = None
+        
+        # Stop the key event processing thread
+        self.key_event_thread_running = False
+        if self.key_event_thread:
+            self.key_event_thread.join(timeout=1.0)
         
         # Release all keys when stopping
         self.release_all_keys()
-        
-        # Clean up alt mode if active
-        if self.alt_mode_active:
-            self.exit_alt_mode()
-        
-        print("Controller stopped")
     
     def _background_thread(self):
-        """Background thread for processing joystick input."""
-        print("Background thread started")
-        
+        """Background thread for continuous updates."""
         while self.running:
-            # Process events to get fresh joystick data
-            pygame.event.pump()
-            
-            # Update controller state
             self.update()
-            
-            # Sleep to reduce CPU usage
-            time.sleep(0.01)  # 10ms sleep for ~100Hz update rate
-        
-        print("Background thread stopped")
-    
-    def start_background_thread(self):
-        """Start the controller background thread. Alias for start()."""
-        return self.start()
-    
-    def stop_background_thread(self):
-        """Stop the controller background thread. Alias for stop()."""
-        return self.stop()
+            time.sleep(0.0005)  # 2000 Hz update rate for maximum responsiveness
     
     def get_debug_info(self):
-        """Get the current debug info."""
+        """Get debug information about the controller state."""
         return self.debug_info

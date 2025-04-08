@@ -41,6 +41,7 @@ VK_CODES = {
     'down': 0x28,  # VK_DOWN
     'c': 0x43,     # C key
     'esc': 0x1B,   # ESC key
+    'alt': 0x12,   # VK_MENU (Alt key)
     # Add more keys as needed
 }
 
@@ -52,6 +53,7 @@ SCAN_CODES = {
     'down': 0xE050,   # Down arrow
     'c': 0x2E,        # C key
     'esc': 0x01,      # ESC key
+    'alt': 0x38,      # Left Alt key
     # Add more keys as needed
 }
 
@@ -295,6 +297,47 @@ def get_cursor_position():
         return (0, 0)
     
     return (point.x, point.y)
+
+def is_key_pressed(key):
+    """Check if a key is currently pressed."""
+    if not INTERCEPTION_AVAILABLE:
+        # Use Windows API to check key state
+        try:
+            if key not in VK_CODES:
+                print(f"Error: Key '{key}' not found in VK_CODES")
+                return False
+            
+            # Import GetAsyncKeyState function
+            GetAsyncKeyState = user32.GetAsyncKeyState
+            GetAsyncKeyState.argtypes = [wintypes.INT]
+            GetAsyncKeyState.restype = wintypes.SHORT
+            
+            # Check if key is pressed (highest bit is set)
+            key_state = GetAsyncKeyState(VK_CODES[key])
+            return (key_state & 0x8000) != 0
+        except Exception as e:
+            print(f"Error checking key state: {e}")
+            return False
+    else:
+        try:
+            # For Interception, we can't directly check key state
+            # This is a limitation of the Interception API
+            # Fallback to Windows API
+            if key not in VK_CODES:
+                print(f"Error: Key '{key}' not found in VK_CODES")
+                return False
+            
+            # Import GetAsyncKeyState function
+            GetAsyncKeyState = user32.GetAsyncKeyState
+            GetAsyncKeyState.argtypes = [wintypes.INT]
+            GetAsyncKeyState.restype = wintypes.SHORT
+            
+            # Check if key is pressed (highest bit is set)
+            key_state = GetAsyncKeyState(VK_CODES[key])
+            return (key_state & 0x8000) != 0
+        except Exception as e:
+            print(f"Error checking key state with Interception: {e}")
+            return False
 
 def mouse_button_up_windows_api(button):
     """Send a mouse button up event using Windows API."""

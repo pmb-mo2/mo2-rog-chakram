@@ -11,7 +11,7 @@ import json
 DEFAULT_DEADZONE = 0.2
 
 # Speed threshold for quick movement through deadzone (units per second)
-DEFAULT_DEADZONE_SPEED_THRESHOLD = 0.5
+DEFAULT_DEADZONE_SPEED_THRESHOLD = 0.05
 
 # Delay between releasing attack button and cancel button (in seconds)
 DEFAULT_RELEASE_DELAY = 0.00
