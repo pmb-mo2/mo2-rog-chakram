@@ -30,6 +30,8 @@ MOUSEEVENTF_RIGHTDOWN = 0x0008
 MOUSEEVENTF_RIGHTUP = 0x0010
 MOUSEEVENTF_MIDDLEDOWN = 0x0020
 MOUSEEVENTF_MIDDLEUP = 0x0040
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_ABSOLUTE = 0x8000
 
 # Virtual key codes (for Windows API fallback)
 VK_CODES = {
@@ -98,6 +100,11 @@ user32 = ctypes.WinDLL('user32', use_last_error=True)
 SendInput = user32.SendInput
 SendInput.argtypes = (wintypes.UINT, ctypes.POINTER(INPUT), wintypes.INT)
 SendInput.restype = wintypes.UINT
+
+# Get cursor position function
+GetCursorPos = user32.GetCursorPos
+GetCursorPos.argtypes = [ctypes.POINTER(wintypes.POINT)]
+GetCursorPos.restype = wintypes.BOOL
 
 # Initialize Interception devices
 keyboard = None
@@ -185,6 +192,26 @@ def create_mouse_input(button, is_down):
         )
     )
 
+def create_mouse_move_input(dx, dy, absolute=False):
+    """Create an INPUT structure for a mouse movement event (Windows API)."""
+    flags = MOUSEEVENTF_MOVE
+    if absolute:
+        flags |= MOUSEEVENTF_ABSOLUTE
+    
+    return INPUT(
+        type=INPUT_MOUSE,
+        union=INPUT_UNION(
+            mi=MOUSEINPUT(
+                dx=dx,
+                dy=dy,
+                mouseData=0,
+                dwFlags=flags,
+                time=0,
+                dwExtraInfo=ctypes.pointer(wintypes.ULONG(0))
+            )
+        )
+    )
+
 def key_down_windows_api(key):
     """Send a key down event using the Windows API."""
     try:
@@ -241,6 +268,33 @@ def mouse_button_down_windows_api(button):
     except Exception as e:
         print(f"Error sending {button} mouse down event: {e}")
         return False
+
+def move_mouse_windows_api(dx, dy, absolute=False):
+    """Move the mouse cursor by the specified delta using Windows API."""
+    try:
+        input_struct = create_mouse_move_input(dx, dy, absolute)
+        
+        result = SendInput(1, ctypes.byref(input_struct), ctypes.sizeof(INPUT))
+        
+        if result != 1:
+            error = ctypes.get_last_error()
+            print(f"Error moving mouse cursor: {error}")
+            return False
+        
+        return True
+    except Exception as e:
+        print(f"Error moving mouse cursor: {e}")
+        return False
+
+def get_cursor_position():
+    """Get the current cursor position."""
+    point = wintypes.POINT()
+    if not GetCursorPos(ctypes.byref(point)):
+        error = ctypes.get_last_error()
+        print(f"Error getting cursor position: {error}")
+        return (0, 0)
+    
+    return (point.x, point.y)
 
 def mouse_button_up_windows_api(button):
     """Send a mouse button up event using Windows API."""
@@ -333,6 +387,51 @@ def left_mouse_down():
         print(f"Error sending left mouse down event with Interception: {e}")
         print("Falling back to Windows API...")
         return mouse_button_down_windows_api('left')
+
+def right_mouse_down():
+    """Send a right mouse button down event."""
+    if not INTERCEPTION_AVAILABLE:
+        return mouse_button_down_windows_api('right')
+    
+    global mouse
+    
+    if not mouse:
+        if not initialize():
+            return mouse_button_down_windows_api('right')
+    
+    try:
+        # Use the interception mouse_down function with right button
+        interception.mouse_down('right')
+        return True
+    except Exception as e:
+        print(f"Error sending right mouse down event with Interception: {e}")
+        print("Falling back to Windows API...")
+        return mouse_button_down_windows_api('right')
+
+def right_mouse_up():
+    """Send a right mouse button up event."""
+    if not INTERCEPTION_AVAILABLE:
+        return mouse_button_up_windows_api('right')
+    
+    global mouse
+    
+    if not mouse:
+        if not initialize():
+            return mouse_button_up_windows_api('right')
+    
+    try:
+        # Use the interception mouse_up function with right button
+        interception.mouse_up('right')
+        return True
+    except Exception as e:
+        print(f"Error sending right mouse up event with Interception: {e}")
+        print("Falling back to Windows API...")
+        return mouse_button_up_windows_api('right')
+
+def move_mouse(dx, dy):
+    """Move the mouse cursor by the specified delta."""
+    # Always use Windows API for mouse movement as Interception doesn't support it directly
+    return move_mouse_windows_api(dx, dy)
 
 def left_mouse_up():
     """Send a left mouse button up event."""
@@ -531,33 +630,56 @@ def send_sector_change(cancel_key, old_attack_key, new_attack_key, release_delay
     Returns:
         bool: True if successful, False otherwise
     """
+    print(f"Executing sector change: {old_attack_key} -> {new_attack_key} with cancel: {cancel_key}")
+    
     if not INTERCEPTION_AVAILABLE:
         # Check if we're using the middle mouse button for cancel
         if cancel_key == "middle_mouse":
-            # 1. Press middle mouse button and release old attack key
+            # 1. Press middle mouse button
             if not middle_mouse_down():
-                return False
-            if not key_up(old_attack_key):
+                print("Failed to press middle mouse button")
                 return False
             
-            # 2. Release middle mouse button
+            # Small delay to ensure cancel is registered
+            time.sleep(0.01)
+            
+            # 2. Release old attack key
+            if not key_up(old_attack_key):
+                print(f"Failed to release old attack key: {old_attack_key}")
+                return False
+            
+            # 3. Release middle mouse button
             if not middle_mouse_up():
+                print("Failed to release middle mouse button")
                 return False
         else:
-            # 1. Press cancel key and release old attack key
+            # 1. Press cancel key
             if not key_down(cancel_key):
-                return False
-            if not key_up(old_attack_key):
+                print(f"Failed to press cancel key: {cancel_key}")
                 return False
             
-            # 2. Release cancel key
+            # Small delay to ensure cancel is registered
+            time.sleep(0.01)
+            
+            # 2. Release old attack key
+            if not key_up(old_attack_key):
+                print(f"Failed to release old attack key: {old_attack_key}")
+                return False
+            
+            # 3. Release cancel key
             if not key_up(cancel_key):
+                print(f"Failed to release cancel key: {cancel_key}")
                 return False
         
-        # 3. Press new attack key
+        # Small delay before pressing new attack key
+        time.sleep(0.01)
+        
+        # 4. Press new attack key
         if not key_down(new_attack_key):
+            print(f"Failed to press new attack key: {new_attack_key}")
             return False
         
+        print(f"Sector change completed: {old_attack_key} -> {new_attack_key}")
         return True
     else:
         global keyboard, mouse
@@ -565,55 +687,37 @@ def send_sector_change(cancel_key, old_attack_key, new_attack_key, release_delay
         if not keyboard or not mouse:
             if not initialize():
                 # Fallback to Windows API implementation
-                return send_sector_change_windows_api(cancel_key, old_attack_key, new_attack_key)
+                return send_sector_change(cancel_key, old_attack_key, new_attack_key, release_delay)
         
         try:
             # Check if we're using the middle mouse button for cancel
             if cancel_key == "middle_mouse":
                 # Use middle mouse button
+                print("Using middle mouse button for cancel")
                 interception.mouse_down('middle')
+                time.sleep(0.01)  # Small delay to ensure cancel is registered
                 interception.key_up(old_attack_key)
                 interception.mouse_up('middle')
+                time.sleep(0.01)  # Small delay before pressing new attack key
                 interception.key_down(new_attack_key)
             else:
                 # Use keyboard key for cancel
+                print(f"Using keyboard key for cancel: {cancel_key}")
                 interception.key_down(cancel_key)
+                time.sleep(0.01)  # Small delay to ensure cancel is registered
                 interception.key_up(old_attack_key)
                 interception.key_up(cancel_key)
+                time.sleep(0.01)  # Small delay before pressing new attack key
                 interception.key_down(new_attack_key)
             
+            print(f"Sector change completed with Interception: {old_attack_key} -> {new_attack_key}")
             return True
         except Exception as e:
             print(f"Error sending sector change with Interception: {e}")
             print("Falling back to Windows API...")
             
             # Fallback to Windows API implementation
-            if cancel_key == "middle_mouse":
-                # 1. Press middle mouse button and release old attack key
-                if not middle_mouse_down_windows_api():
-                    return False
-                if not key_up_windows_api(old_attack_key):
-                    return False
-                
-                # 2. Release middle mouse button
-                if not middle_mouse_up_windows_api():
-                    return False
-            else:
-                # 1. Press cancel key and release old attack key
-                if not key_down_windows_api(cancel_key):
-                    return False
-                if not key_up_windows_api(old_attack_key):
-                    return False
-                
-                # 2. Release cancel key
-                if not key_up_windows_api(cancel_key):
-                    return False
-            
-            # 3. Press new attack key
-            if not key_down_windows_api(new_attack_key):
-                return False
-            
-            return True
+            return send_sector_change(cancel_key, old_attack_key, new_attack_key, release_delay)
 
 # Initialize the Interception context when the module is imported
 initialize()

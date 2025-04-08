@@ -19,6 +19,10 @@ DEFAULT_RELEASE_DELAY = 0.00
 # Cooldown period between sector changes (in seconds) - set to 0 for maximum responsiveness
 DEFAULT_SECTOR_CHANGE_COOLDOWN = 0.0
 
+# Alternative mode settings
+DEFAULT_ALT_MODE_KEY = "alt"  # Default key to activate alternative mode
+DEFAULT_ALT_MODE_CURSOR_OFFSET = 50  # Default cursor movement distance in pixels
+
 # Sector definitions (in degrees, 0° is right, 90° is down)
 DEFAULT_SECTORS = {
     "overhead": {"start": 225, "end": 315},       # Left sector (225° to 315°)
@@ -41,7 +45,8 @@ DEFAULT_KEY_MAPPINGS = {
     "right": "right",       # Right attack key
     "thrust": "down",   # thrust attack key
     "left": "left",        # Left attack key
-    "cancel": "middle_mouse"  # Cancel key (using middle mouse button)
+    "cancel": "middle_mouse",  # Cancel key (using middle mouse button)
+    "alt_mode": "alt"  # Alternative mode activation key
 }
 
 # Default visualization settings
@@ -80,6 +85,8 @@ def load_user_config():
                 "deadzone_speed_threshold": user_config.get("deadzone_speed_threshold", DEFAULT_DEADZONE_SPEED_THRESHOLD),
                 "release_delay": user_config.get("release_delay", DEFAULT_RELEASE_DELAY),
                 "sector_change_cooldown": user_config.get("sector_change_cooldown", DEFAULT_SECTOR_CHANGE_COOLDOWN),
+                "alt_mode_key": user_config.get("alt_mode_key", DEFAULT_ALT_MODE_KEY),
+                "alt_mode_cursor_offset": user_config.get("alt_mode_cursor_offset", DEFAULT_ALT_MODE_CURSOR_OFFSET),
                 "sectors": user_config.get("sectors", DEFAULT_SECTORS),
                 "key_mappings": user_config.get("key_mappings", DEFAULT_KEY_MAPPINGS),
                 "visualization": user_config.get("visualization", DEFAULT_VISUALIZATION)
@@ -106,6 +113,8 @@ DEADZONE = user_config["deadzone"]
 DEADZONE_SPEED_THRESHOLD = user_config.get("deadzone_speed_threshold", DEFAULT_DEADZONE_SPEED_THRESHOLD)
 RELEASE_DELAY = user_config["release_delay"]
 SECTOR_CHANGE_COOLDOWN = user_config.get("sector_change_cooldown", DEFAULT_SECTOR_CHANGE_COOLDOWN)
+ALT_MODE_KEY = user_config.get("alt_mode_key", DEFAULT_ALT_MODE_KEY)
+ALT_MODE_CURSOR_OFFSET = user_config.get("alt_mode_cursor_offset", DEFAULT_ALT_MODE_CURSOR_OFFSET)
 SECTORS = user_config["sectors"]
 KEY_MAPPINGS = user_config["key_mappings"]
 VISUALIZATION = user_config["visualization"]

@@ -206,6 +206,35 @@ class Visualizer:
         self.surface.blit(state_surface, (10, y))
         y += 30
         
+        # Draw alternative mode status
+        alt_mode_active = info.get('alt_mode_active', False)
+        alt_mode_sector = info.get('alt_mode_sector', None)
+        
+        # Create a prominent indicator for alt mode
+        alt_mode_text = f"ALT MODE: {'ACTIVE' if alt_mode_active else 'OFF'}"
+        alt_mode_sector_text = f"Alt Mode Sector: {alt_mode_sector or 'None'}"
+        
+        # Use bright color for alt mode indicator when active
+        alt_mode_color = (255, 255, 0) if alt_mode_active else (100, 100, 100)
+        alt_mode_surface = self.font.render(alt_mode_text, True, alt_mode_color)
+        
+        # Draw with a background highlight when active
+        if alt_mode_active:
+            # Create a background rectangle
+            bg_rect = alt_mode_surface.get_rect(topleft=(10, y))
+            bg_rect.inflate_ip(10, 4)  # Make it slightly larger
+            pygame.draw.rect(self.surface, (50, 50, 0), bg_rect)
+            pygame.draw.rect(self.surface, (100, 100, 0), bg_rect, 2)  # Border
+        
+        self.surface.blit(alt_mode_surface, (10, y))
+        y += 30
+        
+        # Only show alt mode sector if alt mode is active
+        if alt_mode_active:
+            alt_sector_surface = self.font.render(alt_mode_sector_text, True, VISUALIZATION["text_color"])
+            self.surface.blit(alt_sector_surface, (10, y))
+            y += 30
+        
         # Draw deadzone speed and quick movement status
         if "deadzone_speed" in info:
             speed_text = f"Deadzone Speed: {info['deadzone_speed']:.2f}"

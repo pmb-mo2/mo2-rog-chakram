@@ -112,6 +112,28 @@ When you move the joystick:
 2. Moving from one sector to another first presses the cancel button (middle mouse button), releases the current attack key, releases the cancel button, and then presses the new attack key
 3. Returning to the neutral position releases all keys
 
+### Alternative Mode
+
+The application also features an alternative mode that can be activated by holding down a configurable key (default: left Alt). This mode is designed for different gameplay scenarios and works as follows:
+
+When alternative mode is active:
+1. Moving the joystick from the neutral position to a sector:
+   - Moves the cursor 50px (configurable) in the corresponding direction
+   - Presses and holds the right mouse button
+2. Moving from one sector to another:
+   - Releases the right mouse button
+   - Moves the cursor 50px (configurable) in the new direction
+   - Presses and holds the right mouse button again
+3. Returning to the neutral position (center) releases the right mouse button
+
+The sector mapping in alternative mode:
+- **Top sector** (Right): Moves cursor up
+- **Bottom sector** (Left): Moves cursor down
+- **Left sector** (Overhead): Moves cursor left
+- **Right sector** (Thrust): Moves cursor right
+
+To toggle between standard and alternative modes, simply hold or release the alternative mode key (default: left Alt).
+
 ## Configuration
 
 You can customize the controller settings using the configuration editor:
@@ -125,6 +147,9 @@ This provides a user-friendly interface to adjust:
 - **Deadzone**: Radius of the center deadzone (0.0 to 0.5)
 - **Release Delay**: Time between releasing attack and cancel buttons (in seconds)
 - **Sector Change Cooldown**: Minimum time between sector changes to prevent double hits (in seconds)
+- **Alternative Mode Settings**:
+  - **Alt Mode Key**: Key to hold for activating alternative mode (default: left Alt)
+  - **Cursor Offset**: Distance in pixels to move the cursor in alternative mode (default: 50px)
 - **Sector Boundaries**: Angle ranges for each attack direction
 - **Key Mappings**: Keyboard keys for each action
 - **Visualization Settings**: Window size and appearance

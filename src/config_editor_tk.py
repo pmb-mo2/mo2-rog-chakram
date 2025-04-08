@@ -9,7 +9,7 @@ import json
 import math
 import tkinter as tk
 from tkinter import ttk, messagebox
-from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, VISUALIZATION
+from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, ALT_MODE_KEY, ALT_MODE_CURSOR_OFFSET, VISUALIZATION
 
 class ConfigEditor:
     def __init__(self, root):
@@ -25,6 +25,8 @@ class ConfigEditor:
             "deadzone_speed_threshold": DEADZONE_SPEED_THRESHOLD,
             "release_delay": RELEASE_DELAY,
             "sector_change_cooldown": SECTOR_CHANGE_COOLDOWN,
+            "alt_mode_key": ALT_MODE_KEY,
+            "alt_mode_cursor_offset": ALT_MODE_CURSOR_OFFSET,
             "sectors": SECTORS,
             "key_mappings": KEY_MAPPINGS,
             "visualization": VISUALIZATION
@@ -143,6 +145,28 @@ class ConfigEditor:
         self.sector_change_cooldown_label.grid(row=3, column=2, padx=5, pady=5)
         self.sector_change_cooldown_var.trace_add("write", lambda *args: self.sector_change_cooldown_label.config(text=f"{self.sector_change_cooldown_var.get():.2f}"))
         
+        # Alternative mode settings
+        ttk.Label(basic_frame, text="Alternative Mode Settings:").grid(row=4, column=0, columnspan=3, padx=5, pady=(15, 5), sticky=tk.W)
+        
+        # Alternative mode key
+        ttk.Label(basic_frame, text="Alt Mode Key:").grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
+        self.alt_mode_key_var = tk.StringVar(value=self.config["alt_mode_key"])
+        alt_mode_key_entry = ttk.Entry(basic_frame, textvariable=self.alt_mode_key_var, width=10)
+        alt_mode_key_entry.grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
+        
+        # Create a button to capture key press for alt mode
+        capture_alt_button = ttk.Button(basic_frame, text="Capture", command=lambda: self.capture_alt_mode_key())
+        capture_alt_button.grid(row=5, column=2, padx=5, pady=5)
+        
+        # Alternative mode cursor offset slider
+        ttk.Label(basic_frame, text="Cursor Offset (pixels):").grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
+        self.alt_mode_cursor_offset_var = tk.IntVar(value=self.config["alt_mode_cursor_offset"])
+        self.alt_mode_cursor_offset_slider = ttk.Scale(basic_frame, from_=10, to=200, variable=self.alt_mode_cursor_offset_var, orient=tk.HORIZONTAL, length=300)
+        self.alt_mode_cursor_offset_slider.grid(row=6, column=1, padx=5, pady=5)
+        self.alt_mode_cursor_offset_label = ttk.Label(basic_frame, text=f"{self.config['alt_mode_cursor_offset']}")
+        self.alt_mode_cursor_offset_label.grid(row=6, column=2, padx=5, pady=5)
+        self.alt_mode_cursor_offset_var.trace_add("write", lambda *args: self.alt_mode_cursor_offset_label.config(text=f"{self.alt_mode_cursor_offset_var.get()}"))
+        
         # Create the sector boundaries section
         sectors_frame = ttk.LabelFrame(self.content_frame, text="Sector Boundaries")
         sectors_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky=tk.W+tk.E)
@@ -234,6 +258,30 @@ class ConfigEditor:
         self.deadzone_label.config(text=f"{self.deadzone_var.get():.2f}")
         self.update_preview()
     
+    def capture_alt_mode_key(self):
+        """Capture a key press for the alternative mode."""
+        # Create a top-level window for key capture
+        capture_window = tk.Toplevel(self.root)
+        capture_window.title("Capture Alt Mode Key")
+        capture_window.geometry("300x150")
+        capture_window.transient(self.root)
+        capture_window.grab_set()
+        
+        # Create a label with instructions
+        ttk.Label(capture_window, text="Press any key for Alt Mode...\n(ESC to cancel)").pack(pady=10)
+        
+        # Bind key press event
+        def on_key_press(event):
+            if event.keysym == "Escape":
+                capture_window.destroy()
+                return
+            
+            # Set the key variable
+            self.alt_mode_key_var.set(event.keysym.lower())
+            capture_window.destroy()
+        
+        capture_window.bind("<Key>", on_key_press)
+    
     def capture_key(self, action):
         """Capture a key press for the given action."""
         # Create a top-level window for key capture
@@ -275,6 +323,8 @@ class ConfigEditor:
         self.config["deadzone_speed_threshold"] = self.deadzone_speed_threshold_var.get()
         self.config["release_delay"] = self.release_delay_var.get()
         self.config["sector_change_cooldown"] = self.sector_change_cooldown_var.get()
+        self.config["alt_mode_key"] = self.alt_mode_key_var.get()
+        self.config["alt_mode_cursor_offset"] = self.alt_mode_cursor_offset_var.get()
         
         # Update sectors
         for sector_name in SECTORS:
@@ -319,6 +369,10 @@ class ConfigEditor:
         
         # Reset sector change cooldown
         self.sector_change_cooldown_var.set(SECTOR_CHANGE_COOLDOWN)
+        
+        # Reset alternative mode settings
+        self.alt_mode_key_var.set(ALT_MODE_KEY)
+        self.alt_mode_cursor_offset_var.set(ALT_MODE_CURSOR_OFFSET)
         
         # Reset sectors
         for sector_name in SECTORS:

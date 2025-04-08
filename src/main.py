@@ -110,7 +110,8 @@ def main():
                     "Red lines: Sector boundaries",
                     "When crossing a sector boundary: Cancel -> Release Old Attack -> Release Cancel -> New Attack",
                     f"Quick movements through deadzone (>{DEADZONE_SPEED_THRESHOLD:.1f}) are ignored",
-                    f"Sector change cooldown: {SECTOR_CHANGE_COOLDOWN*1000:.0f}ms to prevent double hits"
+                    f"Sector change cooldown: {SECTOR_CHANGE_COOLDOWN*1000:.0f}ms to prevent double hits",
+                    "Hold ALT for alternative mode: Joystick moves cursor and holds right mouse button"
                 ]
                 
                 for i, instruction in enumerate(instructions):

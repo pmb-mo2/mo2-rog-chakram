@@ -8,8 +8,8 @@ import threading
 import time
 import queue
 import pygame
-from src.win_input import key_down, key_up, send_sector_change
-from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN
+from src.win_input import key_down, key_up, send_sector_change, right_mouse_down, right_mouse_up, move_mouse, get_cursor_position
+from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, ALT_MODE_KEY, ALT_MODE_CURSOR_OFFSET
 
 class ChakramController:
     def __init__(self):
@@ -43,6 +43,12 @@ class ChakramController:
         self.deadzone_exit_position = (0, 0)
         self.deadzone_speed = 0
         
+        # Alternative mode
+        self.alt_mode_active = False
+        self.alt_mode_key_pressed = False
+        self.alt_mode_current_sector = None
+        self.alt_mode_right_mouse_down = False
+        
         # Debug info
         self.debug_info = {
             "position": (0, 0),
@@ -52,7 +58,9 @@ class ChakramController:
             "state": None,
             "pressed_keys": [],
             "deadzone_speed": 0,
-            "quick_movement": False
+            "quick_movement": False,
+            "alt_mode_active": False,
+            "alt_mode_sector": None
         }
     
     def initialize(self, joystick_id=None):
@@ -369,10 +377,185 @@ class ChakramController:
         
         return speed
     
+    def check_alt_mode_key(self):
+        """Check if the alternative mode key is pressed."""
+        # Get the alt mode key from config
+        alt_mode_key = KEY_MAPPINGS.get("alt_mode", ALT_MODE_KEY)
+        
+        # Use Windows API to check key state (works even when app is in background)
+        try:
+            import ctypes
+            
+            # Virtual key codes for common keys
+            VK_CODES = {
+                'alt': 0x12,      # VK_MENU (Alt key)
+                'lalt': 0xA4,     # VK_LMENU (Left Alt key)
+                'ctrl': 0x11,     # VK_CONTROL
+                'lctrl': 0xA2,    # VK_LCONTROL
+                'shift': 0x10,    # VK_SHIFT
+                'lshift': 0xA0,   # VK_LSHIFT
+                # Add more as needed
+            }
+            
+            # Get the virtual key code for the alt mode key
+            vk_code = None
+            if alt_mode_key.lower() in VK_CODES:
+                vk_code = VK_CODES[alt_mode_key.lower()]
+            
+            # If we have a valid virtual key code, check its state
+            if vk_code is not None:
+                # GetAsyncKeyState returns a short value
+                # The high-order bit is 1 if the key is currently pressed
+                key_state = ctypes.windll.user32.GetAsyncKeyState(vk_code)
+                return (key_state & 0x8000) != 0
+            
+            # Fallback to pygame if we couldn't use Windows API
+            print(f"Warning: Could not check key state for {alt_mode_key} using Windows API. Falling back to pygame.")
+        except Exception as e:
+            print(f"Error using Windows API for key detection: {e}")
+            print("Falling back to pygame key detection.")
+        
+        # Fallback to pygame key detection (only works when window has focus)
+        keys = pygame.key.get_pressed()
+        
+        # Convert the key name to pygame key constant
+        pygame_key = None
+        if alt_mode_key.lower() == "alt":
+            pygame_key = pygame.K_LALT
+        elif alt_mode_key.lower() == "ctrl":
+            pygame_key = pygame.K_LCTRL
+        elif alt_mode_key.lower() == "shift":
+            pygame_key = pygame.K_LSHIFT
+        # Add more key mappings as needed
+        
+        # Check if the key is pressed
+        if pygame_key is not None:
+            return keys[pygame_key]
+        
+        # Default to False if key not recognized
+        return False
+    
+    def handle_alt_mode(self, angle, distance):
+        """Handle the alternative mode functionality."""
+        # Determine sector
+        new_sector = self.get_current_sector(angle, distance)
+        
+        # Update debug info
+        self.debug_info["alt_mode_active"] = True
+        self.debug_info["alt_mode_sector"] = new_sector
+        
+        # Update position, angle, and distance in debug info
+        current_position = self.get_joystick_position()
+        self.debug_info["position"] = current_position
+        self.debug_info["angle"] = angle
+        self.debug_info["distance"] = distance
+        self.debug_info["sector"] = new_sector
+        
+        # If in deadzone, release right mouse button and reset sector
+        if distance < DEADZONE:
+            if self.alt_mode_right_mouse_down:
+                right_mouse_up()
+                self.alt_mode_right_mouse_down = False
+                print("Alt mode: Released right mouse button (returned to deadzone)")
+            
+            self.alt_mode_current_sector = None
+            return
+        
+        # If we have a new sector
+        if new_sector:
+            # If we're changing from one sector to another
+            if self.alt_mode_current_sector is not None and new_sector != self.alt_mode_current_sector:
+                # Release right mouse button
+                if self.alt_mode_right_mouse_down:
+                    right_mouse_up()
+                    self.alt_mode_right_mouse_down = False
+                    print(f"Alt mode: Released right mouse button (sector change: {self.alt_mode_current_sector} -> {new_sector})")
+                
+                # Move cursor in the new direction
+                self.move_cursor_in_direction(new_sector)
+                
+                # Press right mouse button again
+                right_mouse_down()
+                self.alt_mode_right_mouse_down = True
+                print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
+            
+            # If we're entering a sector from neutral
+            elif self.alt_mode_current_sector is None:
+                # Move cursor in the direction
+                self.move_cursor_in_direction(new_sector)
+                
+                # Press right mouse button
+                right_mouse_down()
+                self.alt_mode_right_mouse_down = True
+                print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
+            
+            # Update current sector
+            self.alt_mode_current_sector = new_sector
+    
+    def move_cursor_in_direction(self, sector):
+        """Move the cursor in the direction corresponding to the sector."""
+        offset = ALT_MODE_CURSOR_OFFSET
+        
+        # Determine direction based on sector name
+        # Move cursor in the direction corresponding to the sector:
+        # - right sector: move cursor right
+        # - left sector: move cursor left
+        # - overhead sector: move cursor up
+        # - thrust sector: move cursor down
+        if sector == "right":
+            dx, dy = offset, 0
+            print(f"Alt mode: Moved cursor right by {offset}px (sector: {sector})")
+        elif sector == "left":
+            dx, dy = -offset, 0
+            print(f"Alt mode: Moved cursor left by {offset}px (sector: {sector})")
+        elif sector == "overhead":
+            dx, dy = 0, -offset
+            print(f"Alt mode: Moved cursor up by {offset}px (sector: {sector})")
+        elif sector == "thrust":
+            dx, dy = 0, offset
+            print(f"Alt mode: Moved cursor down by {offset}px (sector: {sector})")
+        else:
+            return  # Unknown sector
+        
+        # Move the cursor
+        move_mouse(dx, dy)
+    
+    def exit_alt_mode(self):
+        """Clean up when exiting alternative mode."""
+        # Release right mouse button if it's down
+        if self.alt_mode_right_mouse_down:
+            right_mouse_up()
+            self.alt_mode_right_mouse_down = False
+            print("Alt mode: Released right mouse button (exiting alt mode)")
+        
+        # Reset alt mode state
+        self.alt_mode_current_sector = None
+    
     def update(self):
         """Update the controller state and simulate key presses."""
         # Get current time
         current_time = time.time()
+        
+        # Check if alt mode key is pressed
+        alt_key_pressed = self.check_alt_mode_key()
+        
+        # Handle alt mode activation/deactivation
+        if alt_key_pressed and not self.alt_mode_key_pressed:
+            # Alt key just pressed - activate alt mode
+            self.alt_mode_active = True
+            self.alt_mode_key_pressed = True
+            print("Alternative mode activated")
+            
+            # Release all keys from standard mode
+            self.release_all_keys()
+        elif not alt_key_pressed and self.alt_mode_key_pressed:
+            # Alt key just released - deactivate alt mode
+            self.alt_mode_active = False
+            self.alt_mode_key_pressed = False
+            print("Alternative mode deactivated")
+            
+            # Clean up alt mode
+            self.exit_alt_mode()
         
         # Get joystick position, angle, and distance
         current_position = self.get_joystick_position()
@@ -410,6 +593,16 @@ class ChakramController:
             # We'll rely on the minimal sector change cooldown to prevent double hits
             pass
         
+        # If alt mode is active, handle it differently
+        if self.alt_mode_active:
+            self.handle_alt_mode(angle, distance)
+            
+            # Update tracking variables for next iteration
+            self.last_position = current_position
+            self.last_position_time = current_time
+            return
+        
+        # Standard mode processing
         # Determine sector and state - only determine sector if outside deadzone
         new_sector = self.get_current_sector(angle, distance)
         new_state = self.get_current_state(new_sector, angle, distance)
@@ -426,6 +619,7 @@ class ChakramController:
         self.debug_info["pressed_keys"] = list(self.pressed_keys)
         self.debug_info["deadzone_speed"] = self.deadzone_speed
         self.debug_info["quick_movement"] = quick_movement
+        self.debug_info["alt_mode_active"] = self.alt_mode_active
         
         # Skip processing if a sector change is already in progress
         # Note: We've removed the cooldown check for maximum responsiveness
@@ -621,6 +815,10 @@ class ChakramController:
         self.key_event_thread_running = False
         if self.key_event_thread:
             self.key_event_thread.join(timeout=1.0)
+        
+        # Clean up alt mode if active
+        if self.alt_mode_active:
+            self.exit_alt_mode()
         
         # Release all keys when stopping
         self.release_all_keys()
