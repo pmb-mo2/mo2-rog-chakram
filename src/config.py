@@ -11,7 +11,7 @@ import json
 DEFAULT_DEADZONE = 0.15
 
 # Time threshold for deadzone (in seconds) - how long to stay in deadzone before releasing attack
-DEFAULT_DEADZONE_TIME_THRESHOLD = 0.05  # 10ms default
+DEFAULT_DEADZONE_TIME_THRESHOLD = 0.05  # 50ms default
 
 # Speed threshold for quick movement through deadzone (units per second)
 DEFAULT_DEADZONE_SPEED_THRESHOLD = 0.05
@@ -22,9 +22,37 @@ DEFAULT_RELEASE_DELAY = 0.00
 # Cooldown period between sector changes (in seconds) - set to 0 for maximum responsiveness
 DEFAULT_SECTOR_CHANGE_COOLDOWN = 0.0
 
+# Adaptive control system settings
+DEFAULT_ADAPTIVE_ENABLED = True
+
+# Dynamic deadzone settings
+DEFAULT_DYNAMIC_DEADZONE_ENABLED = True
+DEFAULT_DYNAMIC_DEADZONE_MIN_FACTOR = 0.8  # Minimum multiplier for deadzone (fast movements)
+DEFAULT_DYNAMIC_DEADZONE_MAX_FACTOR = 1.5  # Maximum multiplier for deadzone (slow movements)
+
+# Movement prediction settings
+DEFAULT_PREDICTION_ENABLED = True
+DEFAULT_PREDICTION_TIME = 0.1  # Time in seconds to predict ahead
+DEFAULT_PREDICTION_CONFIDENCE_THRESHOLD = 0.3  # Minimum confidence to use predictions
+
+# Transition smoothness settings
+DEFAULT_TRANSITION_SMOOTHNESS = 0.1  # Base smoothness value
+DEFAULT_TRANSITION_MIN_FACTOR = 0.5  # Minimum multiplier for smoothness (fast movements)
+DEFAULT_TRANSITION_MAX_FACTOR = 2.0  # Maximum multiplier for smoothness (slow movements)
+
+# Combat mode settings
+DEFAULT_COMBAT_MODE_ENABLED = True
+DEFAULT_COMBAT_MODE_KEY = "c"  # Key to toggle combat mode
+DEFAULT_COMBAT_MODE_DEADZONE = 0.1  # Smaller deadzone for combat mode
+DEFAULT_COMBAT_MODE_TRANSITION_SMOOTHNESS = 0.05  # Faster transitions for combat mode
+
 # Alternative mode settings
 DEFAULT_ALT_MODE_KEY = "alt"  # Default key to activate alternative mode
 DEFAULT_ALT_MODE_CURSOR_OFFSET = 20  # Default cursor movement distance in pixels
+
+# Game state detection settings
+DEFAULT_GAME_STATE_DETECTION_ENABLED = True
+DEFAULT_COMBAT_TIMEOUT = 5.0  # Time in seconds after last combat action to exit combat state
 
 # Sector definitions (in degrees, 0° is right, 90° is down)
 DEFAULT_SECTORS = {
@@ -93,7 +121,35 @@ def load_user_config():
                 "alt_mode_cursor_offset": user_config.get("alt_mode_cursor_offset", DEFAULT_ALT_MODE_CURSOR_OFFSET),
                 "sectors": user_config.get("sectors", DEFAULT_SECTORS),
                 "key_mappings": user_config.get("key_mappings", DEFAULT_KEY_MAPPINGS),
-                "visualization": user_config.get("visualization", DEFAULT_VISUALIZATION)
+                "visualization": user_config.get("visualization", DEFAULT_VISUALIZATION),
+                
+                # Adaptive control system settings
+                "adaptive_enabled": user_config.get("adaptive_enabled", DEFAULT_ADAPTIVE_ENABLED),
+                
+                # Dynamic deadzone settings
+                "dynamic_deadzone_enabled": user_config.get("dynamic_deadzone_enabled", DEFAULT_DYNAMIC_DEADZONE_ENABLED),
+                "dynamic_deadzone_min_factor": user_config.get("dynamic_deadzone_min_factor", DEFAULT_DYNAMIC_DEADZONE_MIN_FACTOR),
+                "dynamic_deadzone_max_factor": user_config.get("dynamic_deadzone_max_factor", DEFAULT_DYNAMIC_DEADZONE_MAX_FACTOR),
+                
+                # Movement prediction settings
+                "prediction_enabled": user_config.get("prediction_enabled", DEFAULT_PREDICTION_ENABLED),
+                "prediction_time": user_config.get("prediction_time", DEFAULT_PREDICTION_TIME),
+                "prediction_confidence_threshold": user_config.get("prediction_confidence_threshold", DEFAULT_PREDICTION_CONFIDENCE_THRESHOLD),
+                
+                # Transition smoothness settings
+                "transition_smoothness": user_config.get("transition_smoothness", DEFAULT_TRANSITION_SMOOTHNESS),
+                "transition_min_factor": user_config.get("transition_min_factor", DEFAULT_TRANSITION_MIN_FACTOR),
+                "transition_max_factor": user_config.get("transition_max_factor", DEFAULT_TRANSITION_MAX_FACTOR),
+                
+                # Combat mode settings
+                "combat_mode_enabled": user_config.get("combat_mode_enabled", DEFAULT_COMBAT_MODE_ENABLED),
+                "combat_mode_key": user_config.get("combat_mode_key", DEFAULT_COMBAT_MODE_KEY),
+                "combat_mode_deadzone": user_config.get("combat_mode_deadzone", DEFAULT_COMBAT_MODE_DEADZONE),
+                "combat_mode_transition_smoothness": user_config.get("combat_mode_transition_smoothness", DEFAULT_COMBAT_MODE_TRANSITION_SMOOTHNESS),
+                
+                # Game state detection settings
+                "game_state_detection_enabled": user_config.get("game_state_detection_enabled", DEFAULT_GAME_STATE_DETECTION_ENABLED),
+                "combat_timeout": user_config.get("combat_timeout", DEFAULT_COMBAT_TIMEOUT)
             }
         except Exception as e:
             print(f"Error loading user configuration: {e}")
@@ -107,7 +163,35 @@ def load_user_config():
         "sector_change_cooldown": DEFAULT_SECTOR_CHANGE_COOLDOWN,
         "sectors": DEFAULT_SECTORS,
         "key_mappings": DEFAULT_KEY_MAPPINGS,
-        "visualization": DEFAULT_VISUALIZATION
+        "visualization": DEFAULT_VISUALIZATION,
+        
+        # Adaptive control system settings
+        "adaptive_enabled": DEFAULT_ADAPTIVE_ENABLED,
+        
+        # Dynamic deadzone settings
+        "dynamic_deadzone_enabled": DEFAULT_DYNAMIC_DEADZONE_ENABLED,
+        "dynamic_deadzone_min_factor": DEFAULT_DYNAMIC_DEADZONE_MIN_FACTOR,
+        "dynamic_deadzone_max_factor": DEFAULT_DYNAMIC_DEADZONE_MAX_FACTOR,
+        
+        # Movement prediction settings
+        "prediction_enabled": DEFAULT_PREDICTION_ENABLED,
+        "prediction_time": DEFAULT_PREDICTION_TIME,
+        "prediction_confidence_threshold": DEFAULT_PREDICTION_CONFIDENCE_THRESHOLD,
+        
+        # Transition smoothness settings
+        "transition_smoothness": DEFAULT_TRANSITION_SMOOTHNESS,
+        "transition_min_factor": DEFAULT_TRANSITION_MIN_FACTOR,
+        "transition_max_factor": DEFAULT_TRANSITION_MAX_FACTOR,
+        
+        # Combat mode settings
+        "combat_mode_enabled": DEFAULT_COMBAT_MODE_ENABLED,
+        "combat_mode_key": DEFAULT_COMBAT_MODE_KEY,
+        "combat_mode_deadzone": DEFAULT_COMBAT_MODE_DEADZONE,
+        "combat_mode_transition_smoothness": DEFAULT_COMBAT_MODE_TRANSITION_SMOOTHNESS,
+        
+        # Game state detection settings
+        "game_state_detection_enabled": DEFAULT_GAME_STATE_DETECTION_ENABLED,
+        "combat_timeout": DEFAULT_COMBAT_TIMEOUT
     }
 
 # Load the user's configuration
@@ -124,3 +208,31 @@ ALT_MODE_CURSOR_OFFSET = user_config.get("alt_mode_cursor_offset", DEFAULT_ALT_M
 SECTORS = user_config["sectors"]
 KEY_MAPPINGS = user_config["key_mappings"]
 VISUALIZATION = user_config["visualization"]
+
+# Adaptive control system settings
+ADAPTIVE_ENABLED = user_config.get("adaptive_enabled", DEFAULT_ADAPTIVE_ENABLED)
+
+# Dynamic deadzone settings
+DYNAMIC_DEADZONE_ENABLED = user_config.get("dynamic_deadzone_enabled", DEFAULT_DYNAMIC_DEADZONE_ENABLED)
+DYNAMIC_DEADZONE_MIN_FACTOR = user_config.get("dynamic_deadzone_min_factor", DEFAULT_DYNAMIC_DEADZONE_MIN_FACTOR)
+DYNAMIC_DEADZONE_MAX_FACTOR = user_config.get("dynamic_deadzone_max_factor", DEFAULT_DYNAMIC_DEADZONE_MAX_FACTOR)
+
+# Movement prediction settings
+PREDICTION_ENABLED = user_config.get("prediction_enabled", DEFAULT_PREDICTION_ENABLED)
+PREDICTION_TIME = user_config.get("prediction_time", DEFAULT_PREDICTION_TIME)
+PREDICTION_CONFIDENCE_THRESHOLD = user_config.get("prediction_confidence_threshold", DEFAULT_PREDICTION_CONFIDENCE_THRESHOLD)
+
+# Transition smoothness settings
+TRANSITION_SMOOTHNESS = user_config.get("transition_smoothness", DEFAULT_TRANSITION_SMOOTHNESS)
+TRANSITION_MIN_FACTOR = user_config.get("transition_min_factor", DEFAULT_TRANSITION_MIN_FACTOR)
+TRANSITION_MAX_FACTOR = user_config.get("transition_max_factor", DEFAULT_TRANSITION_MAX_FACTOR)
+
+# Combat mode settings
+COMBAT_MODE_ENABLED = user_config.get("combat_mode_enabled", DEFAULT_COMBAT_MODE_ENABLED)
+COMBAT_MODE_KEY = user_config.get("combat_mode_key", DEFAULT_COMBAT_MODE_KEY)
+COMBAT_MODE_DEADZONE = user_config.get("combat_mode_deadzone", DEFAULT_COMBAT_MODE_DEADZONE)
+COMBAT_MODE_TRANSITION_SMOOTHNESS = user_config.get("combat_mode_transition_smoothness", DEFAULT_COMBAT_MODE_TRANSITION_SMOOTHNESS)
+
+# Game state detection settings
+GAME_STATE_DETECTION_ENABLED = user_config.get("game_state_detection_enabled", DEFAULT_GAME_STATE_DETECTION_ENABLED)
+COMBAT_TIMEOUT = user_config.get("combat_timeout", DEFAULT_COMBAT_TIMEOUT)

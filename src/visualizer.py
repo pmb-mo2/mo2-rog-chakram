@@ -1,11 +1,15 @@
 """
 Visualizer module for the Chakram X controller.
-Provides visual feedback for the controller state.
+Provides visual feedback for the controller state and adaptive control system.
 """
 
 import math
 import pygame
-from src.config import SECTORS, VISUALIZATION, DEADZONE, DEADZONE_SPEED_THRESHOLD
+from src.config import (
+    SECTORS, VISUALIZATION, DEADZONE, DEADZONE_SPEED_THRESHOLD,
+    ADAPTIVE_ENABLED, DYNAMIC_DEADZONE_ENABLED, PREDICTION_ENABLED,
+    COMBAT_MODE_ENABLED
+)
 
 class Visualizer:
     def __init__(self, width=None, height=None):
@@ -35,8 +39,8 @@ class Visualizer:
         # Draw the sectors
         self.draw_sectors()
         
-        # Draw the thresholds
-        self.draw_thresholds()
+        # Draw the thresholds with controller info for dynamic visualization
+        self.draw_thresholds(controller_info)
         
         # Draw the joystick position
         self.draw_joystick_position(controller_info["position"])
@@ -46,6 +50,10 @@ class Visualizer:
         
         # Draw the pressed keys
         self.draw_pressed_keys(controller_info["pressed_keys"])
+        
+        # Draw movement trail if available
+        if "movement_trail" in controller_info and controller_info["movement_trail"]:
+            self.draw_movement_trail(controller_info["movement_trail"])
         
         return self.surface
     
@@ -106,16 +114,29 @@ class Visualizer:
         # Blit the transparent surface onto the main surface
         self.surface.blit(sector_surface, (0, 0))
     
-    def draw_thresholds(self):
+    def draw_thresholds(self, controller_info=None):
         """Draw the sector boundaries and deadzone on the surface."""
-        # Draw deadzone circle
+        # Get the current deadzone from controller info if available
+        current_deadzone = controller_info.get("current_deadzone", DEADZONE) if controller_info else DEADZONE
+        
+        # Draw static deadzone circle (dotted)
         pygame.draw.circle(
             self.surface,
-            (50, 50, 50),
+            (80, 80, 80),
             (self.center_x, self.center_y),
             int(self.radius * DEADZONE),
             1
         )
+        
+        # Draw dynamic deadzone circle if different from static (solid)
+        if current_deadzone != DEADZONE:
+            pygame.draw.circle(
+                self.surface,
+                (120, 120, 200),
+                (self.center_x, self.center_y),
+                int(self.radius * current_deadzone),
+                2
+            )
         
         # Draw sector boundary lines
         for sector_name, sector_range in SECTORS.items():
@@ -130,6 +151,41 @@ class Visualizer:
                 VISUALIZATION["state_colors"]["attack"],
                 2
             )
+        
+        # Draw predicted sector if available
+        if controller_info and "predicted_sector" in controller_info and controller_info["predicted_sector"]:
+            predicted_sector = controller_info["predicted_sector"]
+            prediction_confidence = controller_info.get("prediction_confidence", 0.0)
+            
+            # Only draw if we have a valid prediction with reasonable confidence
+            if predicted_sector in SECTORS and prediction_confidence > 0.2:
+                # Draw a pulsing indicator in the predicted sector
+                sector_range = SECTORS[predicted_sector]
+                mid_angle = (sector_range["start"] + sector_range["end"]) / 2
+                if sector_range["start"] > sector_range["end"]:
+                    mid_angle = (sector_range["start"] + sector_range["end"] + 360) / 2
+                    if mid_angle >= 360:
+                        mid_angle -= 360
+                
+                # Calculate position for prediction indicator
+                pred_x = self.center_x + int(self.radius * 0.8 * math.cos(math.radians(mid_angle)))
+                pred_y = self.center_y + int(self.radius * 0.8 * math.sin(math.radians(mid_angle)))
+                
+                # Draw prediction indicator (size based on confidence)
+                indicator_size = int(10 + 10 * prediction_confidence)
+                indicator_color = (255, 255, 0, int(150 * prediction_confidence))
+                
+                # Create a transparent surface for the indicator
+                indicator_surface = pygame.Surface((indicator_size*2, indicator_size*2), pygame.SRCALPHA)
+                pygame.draw.circle(
+                    indicator_surface,
+                    indicator_color,
+                    (indicator_size, indicator_size),
+                    indicator_size
+                )
+                
+                # Blit the transparent surface onto the main surface
+                self.surface.blit(indicator_surface, (pred_x - indicator_size, pred_y - indicator_size))
     
     def draw_threshold_line(self, angle, color, width=1):
         """Draw a threshold line at the specified angle."""
@@ -178,6 +234,7 @@ class Visualizer:
     def draw_debug_info(self, info):
         """Draw debug information on the surface."""
         y = 10
+        right_column_x = self.width - 250
         
         # Draw angle and distance
         angle_text = f"Angle: {info['angle']:.1f}°"
@@ -253,6 +310,96 @@ class Visualizer:
             self.surface.blit(threshold_surface, (10, y))
             y += 30
             self.surface.blit(quick_surface, (10, y))
+            y += 30
+        
+        # Draw adaptive control system information in right column
+        y_right = 10
+        
+        # Draw adaptive control system status
+        adaptive_enabled = info.get('adaptive_enabled', False)
+        adaptive_text = f"Adaptive Control: {'ENABLED' if adaptive_enabled else 'DISABLED'}"
+        adaptive_color = (50, 255, 50) if adaptive_enabled else (150, 150, 150)
+        adaptive_surface = self.font.render(adaptive_text, True, adaptive_color)
+        
+        # Draw with a background highlight when active
+        if adaptive_enabled:
+            bg_rect = adaptive_surface.get_rect(topleft=(right_column_x, y_right))
+            bg_rect.inflate_ip(10, 4)
+            pygame.draw.rect(self.surface, (0, 50, 0), bg_rect)
+            pygame.draw.rect(self.surface, (0, 100, 0), bg_rect, 2)
+        
+        self.surface.blit(adaptive_surface, (right_column_x, y_right))
+        y_right += 30
+        
+        # Only show adaptive details if enabled
+        if adaptive_enabled:
+            # Draw combat mode status
+            combat_mode_active = info.get('combat_mode_active', False)
+            combat_text = f"Combat Mode: {'ACTIVE' if combat_mode_active else 'OFF'}"
+            combat_color = (255, 100, 100) if combat_mode_active else (150, 150, 150)
+            combat_surface = self.font.render(combat_text, True, combat_color)
+            
+            # Draw with a background highlight when active
+            if combat_mode_active:
+                bg_rect = combat_surface.get_rect(topleft=(right_column_x, y_right))
+                bg_rect.inflate_ip(10, 4)
+                pygame.draw.rect(self.surface, (50, 0, 0), bg_rect)
+                pygame.draw.rect(self.surface, (100, 0, 0), bg_rect, 2)
+            
+            self.surface.blit(combat_surface, (right_column_x, y_right))
+            y_right += 30
+            
+            # Draw game state if available
+            if "game_state" in info:
+                game_state = info["game_state"]
+                state_text = f"Game State: {game_state}"
+                state_color = (255, 100, 100) if game_state == "combat" else (100, 255, 100)
+                state_surface = self.font.render(state_text, True, state_color)
+                self.surface.blit(state_surface, (right_column_x, y_right))
+                y_right += 30
+            
+            # Draw dynamic deadzone info
+            if "current_deadzone" in info:
+                deadzone_text = f"Dynamic Deadzone: {info['current_deadzone']:.3f}"
+                deadzone_surface = self.font.render(deadzone_text, True, VISUALIZATION["text_color"])
+                self.surface.blit(deadzone_surface, (right_column_x, y_right))
+                y_right += 30
+            
+            # Draw movement speed
+            if "movement_speed" in info:
+                speed_text = f"Movement Speed: {info['movement_speed']:.3f}"
+                speed_surface = self.font.render(speed_text, True, VISUALIZATION["text_color"])
+                self.surface.blit(speed_surface, (right_column_x, y_right))
+                y_right += 30
+            
+            # Draw transition smoothness
+            if "transition_smoothness" in info:
+                smoothness_text = f"Transition Smoothness: {info['transition_smoothness']:.3f}"
+                smoothness_surface = self.font.render(smoothness_text, True, VISUALIZATION["text_color"])
+                self.surface.blit(smoothness_surface, (right_column_x, y_right))
+                y_right += 30
+            
+            # Draw prediction info
+            if "predicted_sector" in info and info["predicted_sector"]:
+                prediction_text = f"Predicted: {info['predicted_sector']}"
+                confidence_text = f"Confidence: {info['prediction_confidence']:.2f}"
+                
+                # Color based on confidence
+                confidence = info['prediction_confidence']
+                if confidence > 0.7:
+                    pred_color = (50, 255, 50)  # Green for high confidence
+                elif confidence > 0.4:
+                    pred_color = (255, 255, 50)  # Yellow for medium confidence
+                else:
+                    pred_color = (255, 150, 50)  # Orange for low confidence
+                
+                pred_surface = self.font.render(prediction_text, True, pred_color)
+                conf_surface = self.font.render(confidence_text, True, pred_color)
+                
+                self.surface.blit(pred_surface, (right_column_x, y_right))
+                y_right += 30
+                self.surface.blit(conf_surface, (right_column_x, y_right))
+                y_right += 30
     
     def draw_pressed_keys(self, pressed_keys):
         """Draw the currently pressed keys on the surface."""
@@ -263,3 +410,48 @@ class Visualizer:
         keys_text = f"Pressed keys: {', '.join(pressed_keys)}"
         keys_surface = self.font.render(keys_text, True, VISUALIZATION["text_color"])
         self.surface.blit(keys_surface, (10, y))
+    
+    def draw_movement_trail(self, trail_points):
+        """Draw the movement trail showing recent joystick positions."""
+        if not trail_points or len(trail_points) < 2:
+            return
+        
+        # Create a transparent surface for the trail
+        trail_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        
+        # Convert normalized coordinates to screen coordinates
+        screen_points = []
+        for x, y in trail_points:
+            screen_x = self.center_x + int(x * self.radius)
+            screen_y = self.center_y + int(y * self.radius)
+            screen_points.append((screen_x, screen_y))
+        
+        # Draw lines connecting the trail points with fading opacity
+        for i in range(1, len(screen_points)):
+            # Calculate opacity based on position in trail (newer = more opaque)
+            opacity = int(255 * (i / len(screen_points)))
+            
+            # Draw line segment
+            pygame.draw.line(
+                trail_surface,
+                (100, 200, 255, opacity),  # Blue with variable opacity
+                screen_points[i-1],
+                screen_points[i],
+                2
+            )
+        
+        # Draw small circles at each point
+        for i, point in enumerate(screen_points):
+            # Calculate size and opacity based on position in trail
+            size = 1 + int(3 * (i / len(screen_points)))
+            opacity = int(200 * (i / len(screen_points)))
+            
+            pygame.draw.circle(
+                trail_surface,
+                (150, 200, 255, opacity),  # Light blue with variable opacity
+                point,
+                size
+            )
+        
+        # Blit the transparent surface onto the main surface
+        self.surface.blit(trail_surface, (0, 0))
