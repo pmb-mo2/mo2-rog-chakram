@@ -24,7 +24,7 @@ DEFAULT_SECTOR_CHANGE_COOLDOWN = 0.0
 
 # Alternative mode settings
 DEFAULT_ALT_MODE_KEY = "alt"  # Default key to activate alternative mode
-DEFAULT_ALT_MODE_CURSOR_OFFSET = 50  # Default cursor movement distance in pixels
+DEFAULT_ALT_MODE_CURSOR_OFFSET = 20  # Default cursor movement distance in pixels
 
 # Sector definitions (in degrees, 0° is right, 90° is down)
 DEFAULT_SECTORS = {

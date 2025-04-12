@@ -1,6 +1,21 @@
 # Chakram X Alternative Control System for Mortal Online 2
 
-This is a minimal prototype for an alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode.
+This is a prototype for an alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode.
+
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Showcase](#showcase)
+- [Quickstart](#quickstart)
+- [Installation](#installation)
+- [Usage](#usage)
+- [How It Works](#how-it-works)
+- [Configuration](#configuration)
+- [Input System](#input-system)
+- [Troubleshooting](#troubleshooting)
+- [Compatibility](#compatibility)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Requirements
 
@@ -11,45 +26,52 @@ This is a minimal prototype for an alternative control system for Mortal Online 
 - Mortal Online 2
 
 ## Showcase 
-### Speed
-[![Speed Demo](https://img.youtube.com/vi/kpWCWBBhcv0/hqdefault.jpg)](https://youtu.be/kpWCWBBhcv0)
+### Speed & responsives demo
+[![Speed Demo](https://img.youtube.com/vi/m3KuTYRgOfo/hqdefault.jpg)](https://youtu.be/m3KuTYRgOfo)
 
-### Swapping attacks
+### Swapping attacks slowly demo
 [![Swapping Demo](https://img.youtube.com/vi/zsD-gLbEgz8/hqdefault.jpg)](https://www.youtube.com/watch?v=zsD-gLbEgz8)
 
 ## Quickstart
-- install driver and tool (see below)
-- start tool
-- start MO2
-- set attack style = movement keys
-- set attack buttons to arrows
-- enable 'button charges attack'
-- run tool
-- enjoy!
+
+1. Install the required dependencies and drivers (see [Installation](#installation))
+2. Configure your Chakram X mouse to use analog joystick mode
+3. Start the tool with `python run.py`
+4. Launch Mortal Online 2
+5. In MO2 settings:
+   - Set attack style to "movement keys"
+   - Set attack buttons to arrow keys
+   - Enable "button charges attack" option
+6. Return to the game and enjoy enhanced control!
+
+For advanced configuration options, run `python run.py --config` to open the configuration editor.
 
 ## Installation
 
-1. Clone this repository or download the files
-2. Install the required packages:
+1. Clone this repository or download the files:
+   ```bash
+   git clone https://github.com/yourusername/mo2-rog-chakram.git
+   cd mo2-rog-chakram
+   ```
 
-```bash
-pip install -r requirements.txt
-```
+2. Install the required packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 3. (Optional but recommended) Install the Interception driver for enhanced input simulation:
    - Download the Interception driver from [the official GitHub repository](https://github.com/oblitum/Interception)
    - Run the installer as administrator
    - Restart your computer after installation
+   - See [INTERCEPTION_USAGE.md](INTERCEPTION_USAGE.md) for detailed instructions
 
 ## Usage
 
 1. Make sure your Chakram X mouse is connected and the joystick is in analog mode
 2. Run the application:
-
-```bash
-python run.py
-```
-
+   ```bash
+   python run.py
+   ```
 3. The application will display a visualization of the joystick sectors and the current state
 4. Move the joystick to control the attacks in Mortal Online 2
 
@@ -85,10 +107,12 @@ To exit headless mode, press Ctrl+C in the terminal.
 
 The application supports the following command-line options:
 
-- `--config`: Launch the configuration editor
-- `--headless`: Run in headless mode (no GUI)
-- `--joystick ID`: Specify the joystick ID to use (default: 0)
-- `--check`: Run joystick check utility to verify your setup
+| Option | Description |
+|--------|-------------|
+| `--config` | Launch the configuration editor |
+| `--headless` | Run in headless mode (no GUI) |
+| `--joystick ID` | Specify the joystick ID to use (default: 0) |
+| `--check` | Run joystick check utility to verify your setup |
 
 Example:
 
@@ -181,16 +205,23 @@ This will launch an interactive test menu that allows you to test all aspects of
 
 ## Troubleshooting
 
+### Joystick Detection Issues
+
 If you encounter issues with joystick detection:
 1. Make sure the Chakram X mouse is properly connected
 2. Verify that the joystick is in analog mode
 3. Run the joystick check utility: `python run.py --check`
+4. Try using a different USB port
+5. Check if the joystick is recognized by Windows in Control Panel > Devices and Printers
+
+### Input Simulation Issues
 
 If you have issues with key presses not being detected in Mortal Online 2:
 1. Make sure Mortal Online 2 is in focus
 2. Verify that the key mappings match your in-game settings
 3. Try installing the Interception driver for more reliable input simulation
 4. If using the Interception driver, make sure it's properly installed and running
+5. Run the application as administrator: right-click `run.py` and select "Run as administrator"
 
 ### Interception Driver Issues
 
@@ -200,23 +231,30 @@ If you encounter issues with the Interception driver:
 2. Check if you have administrator privileges
 3. Verify that no other application is exclusively capturing input
 4. Look for error messages in the console output
+5. Try reinstalling the driver following the instructions in [INTERCEPTION_USAGE.md](INTERCEPTION_USAGE.md)
 
-## Recent Fixes
+## Compatibility
 
-### Sector Change Cooldown to Prevent Double Hits
+This application has been tested with:
 
-Fixed an issue where rapid sector transitions could cause double hits even when the user didn't press the button twice. The fix implements:
+- Windows 10 and 11
+- Python 3.6, 3.7, 3.8, 3.9, and 3.10
+- ROG Chakram X mouse (firmware version 1.00.00 and above)
+- Mortal Online 2 (latest version)
 
-1. A configurable cooldown period (default: 150ms) between sector changes to prevent unintended double hits
-2. The cooldown timer starts after a sector change is completed and prevents any new sector changes until the cooldown expires
-3. This prevents the controller from registering multiple sector changes in quick succession when the user only intended to make a single movement
+Other joystick-enabled mice may work but have not been extensively tested.
 
-### Key Press Handling During Quick Sector Changes
+## Contributing
 
-Fixed an issue where rapid sector transitions could cause key presses to be processed in the wrong order. The fix ensures that:
+Contributions are welcome! If you'd like to contribute to this project:
 
-1. The cancel key is fully registered before releasing the old attack key
-2. A small delay (10ms) is added between pressing the cancel key and releasing the old attack key
-3. The release delay between actions has been increased from 50ms to 80ms for better reliability
+1. Fork the repository
+2. Create a new branch for your feature or bugfix
+3. Make your changes
+4. Submit a pull request
 
-This addresses the bug where the game would sometimes process the key release before the cancel key press during very quick sector changes.
+Please ensure your code follows the existing style and includes appropriate documentation.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
