@@ -56,10 +56,10 @@ DEFAULT_COMBAT_TIMEOUT = 5.0  # Time in seconds after last combat action to exit
 
 # Sector definitions (in degrees, 0° is right, 90° is down)
 DEFAULT_SECTORS = {
-    "overhead": {"start": 225, "end": 315},       # Left sector (225° to 315°)
-    "right": {"start": 315, "end": 45},    # Top sector (315° to 45°)
-    "thrust": {"start": 45, "end": 135},   # Right sector (45° to 135°)
-    "left": {"start": 135, "end": 225}       # Bottom sector (135° to 225°)
+    "overhead": {"start": 240, "end": 340},    # Top-left sector (larger, 100°)
+    "right": {"start": 340, "end": 70},        # Top-right sector (larger, 90°)
+    "thrust": {"start": 70, "end": 160},       # Bottom-right sector (smaller, 90°)
+    "left": {"start": 160, "end": 240}         # Bottom-left sector (smaller, 80°)
 }
 
 # Sector definitions (in degrees, 0° is right, 90° is down)
