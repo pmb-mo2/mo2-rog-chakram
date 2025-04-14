@@ -342,6 +342,14 @@ class ChakramController:
         Uses optimized key_down function for maximum speed.
         Supports middle mouse button.
         """
+        # Don't press attack keys if in alt mode
+        if self.alt_mode_active:
+            # Check if this is an attack key (one of the sector keys)
+            attack_keys = [KEY_MAPPINGS[sector] for sector in SECTORS.keys()]
+            if key in attack_keys:
+                print(f"Ignoring attack key press in alt mode: {key}")
+                return False
+        
         if key not in self.pressed_keys:
             try:
                 if key == "middle_mouse":
@@ -931,6 +939,14 @@ class ChakramController:
         Uses optimized key_down function for maximum speed.
         Supports middle mouse button.
         """
+        # Don't press attack keys if in alt mode
+        if self.alt_mode_active:
+            # Check if this is an attack key (one of the sector keys)
+            attack_keys = [KEY_MAPPINGS[sector] for sector in SECTORS.keys()]
+            if key in attack_keys:
+                print(f"Ignoring attack key press in alt mode: {key}")
+                return False
+        
         if key not in self.pressed_keys:
             try:
                 if key == "middle_mouse":
