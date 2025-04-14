@@ -1,9 +1,10 @@
 # Chakram X Alternative Control System for Mortal Online 2
 
-This is a minimal prototype for an alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode.
+This is a community version of an alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode.
+Compared to the paid version, it has limited functionality and is less optimized in terms of algorithms.
+Fork it to your heart's content!
 
 ## Requirements
-
 - Python 3.6+
 - pygame 2.1.2
 - interception-python 1.1.0 (for enhanced input simulation)
@@ -18,14 +19,17 @@ This is a minimal prototype for an alternative control system for Mortal Online 
 [![Swapping Demo](https://img.youtube.com/vi/zsD-gLbEgz8/hqdefault.jpg)](https://www.youtube.com/watch?v=zsD-gLbEgz8)
 
 ## Quickstart
-- install driver and tool (see below)
-- start tool
-- start MO2
-- set attack style = movement keys
-- set attack buttons to arrows
-- enable 'button charges attack'
-- run tool
-- enjoy!
+1. Install the required dependencies and drivers (see [Installation](#installation))
+2. Configure your Chakram X mouse to use analog joystick mode
+3. Start the tool with `python run.py`
+4. Launch Mortal Online 2
+5. In MO2 settings:
+   - Set attack style to "movement keys"
+   - Set attack buttons to arrow keys
+   - Enable "button charges attack" option
+6. Return to the game and enjoy enhanced control!
+
+For advanced configuration options, run `python run.py --config` to open the configuration editor.
 
 ## Installation
 
@@ -175,23 +179,3 @@ If you encounter issues with the Interception driver:
 2. Check if you have administrator privileges
 3. Verify that no other application is exclusively capturing input
 4. Look for error messages in the console output
-
-## Recent Fixes
-
-### Sector Change Cooldown to Prevent Double Hits
-
-Fixed an issue where rapid sector transitions could cause double hits even when the user didn't press the button twice. The fix implements:
-
-1. A configurable cooldown period (default: 150ms) between sector changes to prevent unintended double hits
-2. The cooldown timer starts after a sector change is completed and prevents any new sector changes until the cooldown expires
-3. This prevents the controller from registering multiple sector changes in quick succession when the user only intended to make a single movement
-
-### Key Press Handling During Quick Sector Changes
-
-Fixed an issue where rapid sector transitions could cause key presses to be processed in the wrong order. The fix ensures that:
-
-1. The cancel key is fully registered before releasing the old attack key
-2. A small delay (10ms) is added between pressing the cancel key and releasing the old attack key
-3. The release delay between actions has been increased from 50ms to 80ms for better reliability
-
-This addresses the bug where the game would sometimes process the key release before the cancel key press during very quick sector changes.
