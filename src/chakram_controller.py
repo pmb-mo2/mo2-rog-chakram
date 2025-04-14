@@ -53,6 +53,9 @@ class ChakramController:
         self.deadzone_exit_position = (0, 0)
         self.deadzone_speed = 0
         
+        # Track the last active sector before entering deadzone
+        self.last_active_sector = None
+        
         # Alternative mode
         self.alt_mode_active = False
         self.alt_mode_key_pressed = False
@@ -690,6 +693,11 @@ class ChakramController:
             self.deadzone_entry_time = current_time
             print(f"Entered deadzone at {current_time:.3f}")
             
+            # Store the last active sector before entering deadzone
+            if self.current_sector is not None:
+                self.last_active_sector = self.current_sector
+                print(f"Stored last active sector: {self.last_active_sector}")
+            
             # Reset sector change flag when entering deadzone
             self.sector_change_in_progress = False
         
@@ -712,6 +720,26 @@ class ChakramController:
             
             # Reset sector change flag when exiting deadzone
             self.sector_change_in_progress = False
+            
+            # Get the new sector after exiting deadzone
+            new_sector = self.get_current_sector(angle, distance)
+            
+            # If we have a valid new sector and a stored last active sector
+            # and they are different, trigger a sector change
+            if (new_sector is not None and 
+                self.last_active_sector is not None and 
+                new_sector != self.last_active_sector):
+                print(f"Detected sector change through deadzone: {self.last_active_sector} -> {new_sector}")
+                
+                # Set the sector change flag and update the last change time
+                self.sector_change_in_progress = True
+                self.last_sector_change_time = current_time
+                
+                # Handle the sector change directly
+                self._enqueue_sector_change(self.last_active_sector, new_sector)
+                
+                # Update current sector to the new one
+                self.current_sector = new_sector
         
         # If alt mode is active, handle it differently
         if self.alt_mode_active:
@@ -1211,6 +1239,11 @@ class ChakramController:
             self.deadzone_entry_time = current_time
             print(f"Entered deadzone at {current_time:.3f}")
             
+            # Store the last active sector before entering deadzone
+            if self.current_sector is not None:
+                self.last_active_sector = self.current_sector
+                print(f"Stored last active sector: {self.last_active_sector}")
+            
             # Reset sector change flag when entering deadzone
             self.sector_change_in_progress = False
         
@@ -1233,6 +1266,26 @@ class ChakramController:
             
             # Reset sector change flag when exiting deadzone
             self.sector_change_in_progress = False
+            
+            # Get the new sector after exiting deadzone
+            new_sector = self.get_current_sector(angle, distance)
+            
+            # If we have a valid new sector and a stored last active sector
+            # and they are different, trigger a sector change
+            if (new_sector is not None and 
+                self.last_active_sector is not None and 
+                new_sector != self.last_active_sector):
+                print(f"Detected sector change through deadzone: {self.last_active_sector} -> {new_sector}")
+                
+                # Set the sector change flag and update the last change time
+                self.sector_change_in_progress = True
+                self.last_sector_change_time = current_time
+                
+                # Handle the sector change directly
+                self._enqueue_sector_change(self.last_active_sector, new_sector)
+                
+                # Update current sector to the new one
+                self.current_sector = new_sector
         
         # If alt mode is active, handle it differently
         if self.alt_mode_active:
