@@ -1,7 +1,9 @@
 # Chakram X Alternative Control System for Mortal Online 2
 
 This is a community version of an alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode.
+
 Compared to the paid version, it has limited functionality and is less optimized in terms of algorithms.
+
 Fork it to your heart's content!
 
 ## Requirements
