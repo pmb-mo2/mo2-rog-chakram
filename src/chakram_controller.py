@@ -736,6 +736,13 @@ class ChakramController:
         
         # If alt mode is active, handle it differently
         if self.alt_mode_active:
+            # Release any attack keys that might still be pressed
+            attack_keys = [KEY_MAPPINGS[sector] for sector in SECTORS.keys()]
+            for key in list(self.pressed_keys):
+                if key in attack_keys:
+                    self.release_key(key)
+                    print(f"Released attack key {key} in alt mode")
+            
             # Handle alt mode and ensure position is updated in debug info
             self.handle_alt_mode(angle, distance)
             
