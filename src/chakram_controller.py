@@ -494,37 +494,6 @@ class ChakramController:
         speed = distance / time_diff
         
         return speed
-    
-    
-    def handle_alt_mode(self, angle, distance):
-        """Handle the alternative mode functionality."""
-        # Determine sector - use a smaller deadzone for more responsiveness in alt mode
-        alt_mode_deadzone = DEADZONE * 0.8  # 20% smaller deadzone for alt mode
-        
-        # Determine sector directly without using get_current_sector to avoid extra calculations
-        if distance < alt_mode_deadzone:
-            new_sector = None
-        else:
-            # Direct sector determination for speed
-            for sector_name, sector_range in SECTORS.items():
-                start = sector_range["start"]
-                end = sector_range["end"]
-                
-                # Handle sector that wraps around 0°
-                if start > end:
-                    if angle >= start or angle <= end:
-                        new_sector = sector_name
-                        break
-                else:
-                    if start <= angle <= end:
-                        new_sector = sector_name
-                        break
-            else:
-                new_sector = None
-        
-        # Minimal debug info update - only what's necessary
-        self.debug_info["alt_mode_active"] = True
-        self.debug_info["alt_mode_sector"] = new_sector
         
         # If in deadzone, release right mouse button and reset sector
         if distance < alt_mode_deadzone:
@@ -767,7 +736,13 @@ class ChakramController:
         
         # If alt mode is active, handle it differently
         if self.alt_mode_active:
+            # Handle alt mode and ensure position is updated in debug info
             self.handle_alt_mode(angle, distance)
+            
+            # Make sure debug info has the current position
+            self.debug_info["position"] = current_position
+            self.debug_info["angle"] = angle
+            self.debug_info["distance"] = distance
             
             # Update tracking variables for next iteration
             self.last_position = current_position
@@ -1135,7 +1110,13 @@ class ChakramController:
             else:
                 new_sector = None
         
-        # Minimal debug info update - only what's necessary
+        # Get current joystick position for visualization
+        current_position = self.get_joystick_position()
+        
+        # Update debug info with current position and other alt mode info
+        self.debug_info["position"] = current_position
+        self.debug_info["angle"] = angle
+        self.debug_info["distance"] = distance
         self.debug_info["alt_mode_active"] = True
         self.debug_info["alt_mode_sector"] = new_sector
         
