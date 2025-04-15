@@ -79,7 +79,7 @@
  [],
  False,
  False,
- 1744481131,
+ 1744609367,
  [('run.exe',
    'C:\\Users\\pmb\\.pyenv\\pyenv-win\\versions\\3.10.11\\lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe',
    'EXECUTABLE')],

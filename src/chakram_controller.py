@@ -498,26 +498,41 @@ class ChakramController:
     
     def handle_alt_mode(self, angle, distance):
         """Handle the alternative mode functionality."""
-        # Determine sector
-        new_sector = self.get_current_sector(angle, distance)
+        # Determine sector - use a smaller deadzone for more responsiveness in alt mode
+        alt_mode_deadzone = DEADZONE * 0.8  # 20% smaller deadzone for alt mode
         
-        # Update debug info
+        # Determine sector directly without using get_current_sector to avoid extra calculations
+        if distance < alt_mode_deadzone:
+            new_sector = None
+        else:
+            # Direct sector determination for speed
+            for sector_name, sector_range in SECTORS.items():
+                start = sector_range["start"]
+                end = sector_range["end"]
+                
+                # Handle sector that wraps around 0°
+                if start > end:
+                    if angle >= start or angle <= end:
+                        new_sector = sector_name
+                        break
+                else:
+                    if start <= angle <= end:
+                        new_sector = sector_name
+                        break
+            else:
+                new_sector = None
+        
+        # Minimal debug info update - only what's necessary
         self.debug_info["alt_mode_active"] = True
         self.debug_info["alt_mode_sector"] = new_sector
         
-        # Update position, angle, and distance in debug info
-        current_position = self.get_joystick_position()
-        self.debug_info["position"] = current_position
-        self.debug_info["angle"] = angle
-        self.debug_info["distance"] = distance
-        self.debug_info["sector"] = new_sector
-        
         # If in deadzone, release right mouse button and reset sector
-        if distance < DEADZONE:
+        if distance < alt_mode_deadzone:
             if self.alt_mode_right_mouse_down:
                 right_mouse_up()
                 self.alt_mode_right_mouse_down = False
-                print("Alt mode: Released right mouse button (returned to deadzone)")
+                # Reduce logging to improve performance
+                # print("Alt mode: Released right mouse button (returned to deadzone)")
             
             self.alt_mode_current_sector = None
             return
@@ -530,7 +545,8 @@ class ChakramController:
                 if self.alt_mode_right_mouse_down:
                     right_mouse_up()
                     self.alt_mode_right_mouse_down = False
-                    print(f"Alt mode: Released right mouse button (sector change: {self.alt_mode_current_sector} -> {new_sector})")
+                    # Reduce logging to improve performance
+                    # print(f"Alt mode: Released right mouse button (sector change: {self.alt_mode_current_sector} -> {new_sector})")
                 
                 # Move cursor in the new direction
                 self.move_cursor_in_direction(new_sector)
@@ -538,7 +554,8 @@ class ChakramController:
                 # Press right mouse button again
                 right_mouse_down()
                 self.alt_mode_right_mouse_down = True
-                print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
+                # Reduce logging to improve performance
+                # print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
             
             # If we're entering a sector from neutral
             elif self.alt_mode_current_sector is None:
@@ -548,7 +565,8 @@ class ChakramController:
                 # Press right mouse button
                 right_mouse_down()
                 self.alt_mode_right_mouse_down = True
-                print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
+                # Reduce logging to improve performance
+                # print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
             
             # Update current sector
             self.alt_mode_current_sector = new_sector
@@ -558,26 +576,23 @@ class ChakramController:
         # Get the cursor offset from config
         offset = ALT_MODE_CURSOR_OFFSET
         
-        # Determine direction based on sector name
-        # Move cursor in the direction corresponding to the sector:
-        # - right sector: move cursor right
-        # - left sector: move cursor left
-        # - overhead sector: move cursor up
-        # - thrust sector: move cursor down
-        if sector == "right":
-            dx, dy = offset, 0
-            print(f"Alt mode: Moved cursor right by {offset}px (sector: {sector})")
-        elif sector == "left":
-            dx, dy = -offset, 0
-            print(f"Alt mode: Moved cursor left by {offset}px (sector: {sector})")
-        elif sector == "overhead":
-            dx, dy = 0, -offset
-            print(f"Alt mode: Moved cursor up by {offset}px (sector: {sector})")
-        elif sector == "thrust":
-            dx, dy = 0, offset
-            print(f"Alt mode: Moved cursor down by {offset}px (sector: {sector})")
-        else:
+        # Use a lookup table for faster direction determination
+        # This avoids multiple if-else checks
+        direction_map = {
+            "right": (offset, 0),
+            "left": (-offset, 0),
+            "overhead": (0, -offset),
+            "thrust": (0, offset)
+        }
+        
+        # Get direction from map or default to (0,0)
+        dx, dy = direction_map.get(sector, (0, 0))
+        
+        if dx == 0 and dy == 0:
             return  # Unknown sector
+        
+        # Reduce logging to improve performance
+        # print(f"Alt mode: Moved cursor by ({dx},{dy})px (sector: {sector})")
         
         # Move the cursor
         move_mouse(dx, dy)
@@ -588,7 +603,8 @@ class ChakramController:
         if self.alt_mode_right_mouse_down:
             right_mouse_up()
             self.alt_mode_right_mouse_down = False
-            print("Alt mode: Released right mouse button (exiting alt mode)")
+            # Reduce logging to improve performance
+            # print("Alt mode: Released right mouse button (exiting alt mode)")
         
         # Reset alt mode state
         self.alt_mode_current_sector = None
@@ -1095,26 +1111,41 @@ class ChakramController:
     
     def handle_alt_mode(self, angle, distance):
         """Handle the alternative mode functionality."""
-        # Determine sector
-        new_sector = self.get_current_sector(angle, distance)
+        # Determine sector - use a smaller deadzone for more responsiveness in alt mode
+        alt_mode_deadzone = DEADZONE * 0.8  # 20% smaller deadzone for alt mode
         
-        # Update debug info
+        # Determine sector directly without using get_current_sector to avoid extra calculations
+        if distance < alt_mode_deadzone:
+            new_sector = None
+        else:
+            # Direct sector determination for speed
+            for sector_name, sector_range in SECTORS.items():
+                start = sector_range["start"]
+                end = sector_range["end"]
+                
+                # Handle sector that wraps around 0°
+                if start > end:
+                    if angle >= start or angle <= end:
+                        new_sector = sector_name
+                        break
+                else:
+                    if start <= angle <= end:
+                        new_sector = sector_name
+                        break
+            else:
+                new_sector = None
+        
+        # Minimal debug info update - only what's necessary
         self.debug_info["alt_mode_active"] = True
         self.debug_info["alt_mode_sector"] = new_sector
         
-        # Update position, angle, and distance in debug info
-        current_position = self.get_joystick_position()
-        self.debug_info["position"] = current_position
-        self.debug_info["angle"] = angle
-        self.debug_info["distance"] = distance
-        self.debug_info["sector"] = new_sector
-        
         # If in deadzone, release right mouse button and reset sector
-        if distance < DEADZONE:
+        if distance < alt_mode_deadzone:
             if self.alt_mode_right_mouse_down:
                 right_mouse_up()
                 self.alt_mode_right_mouse_down = False
-                print("Alt mode: Released right mouse button (returned to deadzone)")
+                # Reduce logging to improve performance
+                # print("Alt mode: Released right mouse button (returned to deadzone)")
             
             self.alt_mode_current_sector = None
             return
@@ -1127,7 +1158,8 @@ class ChakramController:
                 if self.alt_mode_right_mouse_down:
                     right_mouse_up()
                     self.alt_mode_right_mouse_down = False
-                    print(f"Alt mode: Released right mouse button (sector change: {self.alt_mode_current_sector} -> {new_sector})")
+                    # Reduce logging to improve performance
+                    # print(f"Alt mode: Released right mouse button (sector change: {self.alt_mode_current_sector} -> {new_sector})")
                 
                 # Move cursor in the new direction
                 self.move_cursor_in_direction(new_sector)
@@ -1135,7 +1167,8 @@ class ChakramController:
                 # Press right mouse button again
                 right_mouse_down()
                 self.alt_mode_right_mouse_down = True
-                print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
+                # Reduce logging to improve performance
+                # print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
             
             # If we're entering a sector from neutral
             elif self.alt_mode_current_sector is None:
@@ -1145,7 +1178,8 @@ class ChakramController:
                 # Press right mouse button
                 right_mouse_down()
                 self.alt_mode_right_mouse_down = True
-                print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
+                # Reduce logging to improve performance
+                # print(f"Alt mode: Pressed right mouse button (new sector: {new_sector})")
             
             # Update current sector
             self.alt_mode_current_sector = new_sector
@@ -1155,26 +1189,23 @@ class ChakramController:
         # Get the cursor offset from config
         offset = ALT_MODE_CURSOR_OFFSET
         
-        # Determine direction based on sector name
-        # Move cursor in the direction corresponding to the sector:
-        # - right sector: move cursor right
-        # - left sector: move cursor left
-        # - overhead sector: move cursor up
-        # - thrust sector: move cursor down
-        if sector == "right":
-            dx, dy = offset, 0
-            print(f"Alt mode: Moved cursor right by {offset}px (sector: {sector})")
-        elif sector == "left":
-            dx, dy = -offset, 0
-            print(f"Alt mode: Moved cursor left by {offset}px (sector: {sector})")
-        elif sector == "overhead":
-            dx, dy = 0, -offset
-            print(f"Alt mode: Moved cursor up by {offset}px (sector: {sector})")
-        elif sector == "thrust":
-            dx, dy = 0, offset
-            print(f"Alt mode: Moved cursor down by {offset}px (sector: {sector})")
-        else:
+        # Use a lookup table for faster direction determination
+        # This avoids multiple if-else checks
+        direction_map = {
+            "right": (offset, 0),
+            "left": (-offset, 0),
+            "overhead": (0, -offset),
+            "thrust": (0, offset)
+        }
+        
+        # Get direction from map or default to (0,0)
+        dx, dy = direction_map.get(sector, (0, 0))
+        
+        if dx == 0 and dy == 0:
             return  # Unknown sector
+        
+        # Reduce logging to improve performance
+        # print(f"Alt mode: Moved cursor by ({dx},{dy})px (sector: {sector})")
         
         # Move the cursor
         move_mouse(dx, dy)
@@ -1185,7 +1216,8 @@ class ChakramController:
         if self.alt_mode_right_mouse_down:
             right_mouse_up()
             self.alt_mode_right_mouse_down = False
-            print("Alt mode: Released right mouse button (exiting alt mode)")
+            # Reduce logging to improve performance
+            # print("Alt mode: Released right mouse button (exiting alt mode)")
         
         # Reset alt mode state
         self.alt_mode_current_sector = None
