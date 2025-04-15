@@ -292,25 +292,7 @@ class Visualizer:
             self.surface.blit(alt_sector_surface, (10, y))
             y += 30
         
-        # Draw deadzone speed and quick movement status
-        if "deadzone_speed" in info:
-            speed_text = f"Deadzone Speed: {info['deadzone_speed']:.2f}"
-            threshold_text = f"Threshold: {DEADZONE_SPEED_THRESHOLD:.2f}"
-            quick_text = f"Quick Movement: {'Yes' if info.get('quick_movement', False) else 'No'}"
-            
-            # Use red for quick movement, green otherwise
-            quick_color = (255, 50, 50) if info.get('quick_movement', False) else (50, 255, 50)
-            
-            speed_surface = self.font.render(speed_text, True, VISUALIZATION["text_color"])
-            threshold_surface = self.font.render(threshold_text, True, VISUALIZATION["text_color"])
-            quick_surface = self.font.render(quick_text, True, quick_color)
-            
-            self.surface.blit(speed_surface, (10, y))
-            y += 30
-            self.surface.blit(threshold_surface, (10, y))
-            y += 30
-            self.surface.blit(quick_surface, (10, y))
-            y += 30
+        # Removed: deadzone speed and thresholds, quick movement indicators
         
         # Draw adaptive control system information in right column
         y_right = 10
@@ -349,35 +331,9 @@ class Visualizer:
             self.surface.blit(combat_surface, (right_column_x, y_right))
             y_right += 30
             
-            # Draw game state if available
-            if "game_state" in info:
-                game_state = info["game_state"]
-                state_text = f"Game State: {game_state}"
-                state_color = (255, 100, 100) if game_state == "combat" else (100, 255, 100)
-                state_surface = self.font.render(state_text, True, state_color)
-                self.surface.blit(state_surface, (right_column_x, y_right))
-                y_right += 30
-            
-            # Draw dynamic deadzone info
-            if "current_deadzone" in info:
-                deadzone_text = f"Dynamic Deadzone: {info['current_deadzone']:.3f}"
-                deadzone_surface = self.font.render(deadzone_text, True, VISUALIZATION["text_color"])
-                self.surface.blit(deadzone_surface, (right_column_x, y_right))
-                y_right += 30
-            
-            # Draw movement speed
-            if "movement_speed" in info:
-                speed_text = f"Movement Speed: {info['movement_speed']:.3f}"
-                speed_surface = self.font.render(speed_text, True, VISUALIZATION["text_color"])
-                self.surface.blit(speed_surface, (right_column_x, y_right))
-                y_right += 30
-            
-            # Draw transition smoothness
-            if "transition_smoothness" in info:
-                smoothness_text = f"Transition Smoothness: {info['transition_smoothness']:.3f}"
-                smoothness_surface = self.font.render(smoothness_text, True, VISUALIZATION["text_color"])
-                self.surface.blit(smoothness_surface, (right_column_x, y_right))
-                y_right += 30
+            # Removed: game state information
+            # Removed: dynamic deadzone settings
+            # Removed: movement speed and transition smoothness details
             
             # Draw prediction info
             if "predicted_sector" in info and info["predicted_sector"]:
