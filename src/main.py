@@ -6,6 +6,7 @@ import sys
 import pygame
 from src.chakram_controller import ChakramController
 from src.visualizer import Visualizer
+from src.trainer import ChakramTrainer
 from src.config import VISUALIZATION, DEADZONE_SPEED_THRESHOLD, SECTOR_CHANGE_COOLDOWN
 
 def initialize_pygame():
@@ -73,12 +74,19 @@ def main():
         visualizer = Visualizer()
         visualizer.initialize()
     
+    # Initialize the trainer
+    trainer = None
+    if not headless_mode and visualizer:
+        trainer = ChakramTrainer(visualizer)
+        trainer.initialize()
+    
     # Start the controller background thread
     controller.start_background_thread()
     
     # Main loop
     clock = pygame.time.Clock()
     running = True
+    training_mode = False
     
     try:
         print("Chakram X controller is running. Press Ctrl+C to exit.")
@@ -91,18 +99,79 @@ def main():
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                    # Training mode controls
+                    elif event.key == pygame.K_t and trainer:
+                        # Toggle training mode
+                        if not trainer.active:
+                            print("Starting training exercise...")
+                            trainer.start_exercise("random_targets", difficulty=1, duration=60)
+                        else:
+                            print("Stopping training exercise...")
+                            trainer.stop_exercise()
+                    elif event.key == pygame.K_1 and trainer:
+                        if not trainer.active:
+                            # Start easy training
+                            trainer.start_exercise("random_targets", difficulty=1, duration=60)
+                        else:
+                            # Change to difficulty 1 (easy)
+                            trainer.difficulty = 1
+                            trainer.target_interval = 3.0 - (trainer.difficulty * 0.4)
+                            print("Changed to Easy difficulty")
+                            
+                    elif event.key == pygame.K_2 and trainer:
+                        if not trainer.active:
+                            # Start medium training
+                            trainer.start_exercise("random_targets", difficulty=2, duration=60)
+                        else:
+                            # Change to difficulty 2
+                            trainer.difficulty = 2
+                            trainer.target_interval = 3.0 - (trainer.difficulty * 0.4)
+                            print("Changed to Medium difficulty")
+                            
+                    elif event.key == pygame.K_3 and trainer:
+                        if not trainer.active:
+                            # Start hard training
+                            trainer.start_exercise("random_targets", difficulty=3, duration=60)
+                        else:
+                            # Change to difficulty 3
+                            trainer.difficulty = 3
+                            trainer.target_interval = 3.0 - (trainer.difficulty * 0.4)
+                            print("Changed to Hard difficulty")
+                            
+                    elif event.key == pygame.K_4 and trainer and trainer.active:
+                        # Change to difficulty 4 (expert)
+                        trainer.difficulty = 4
+                        trainer.target_interval = 3.0 - (trainer.difficulty * 0.4)
+                        print("Changed to Expert difficulty")
+                        
+                    elif event.key == pygame.K_5 and trainer and trainer.active:
+                        # Change to difficulty 5 (master)
+                        trainer.difficulty = 5
+                        trainer.target_interval = 3.0 - (trainer.difficulty * 0.4)
+                        print("Changed to Master difficulty")
             
             # Get controller debug info
             controller_info = controller.get_debug_info()
+            
+            # Update trainer if active
+            if trainer and trainer.active:
+                trainer.update(controller_info)
             
             # Draw the visualization if not in headless mode
             if not headless_mode and visualizer and screen:
                 # Draw the visualization
                 visualization = visualizer.draw(controller_info)
+                
+                # Apply trainer overlay if active
+                if trainer and trainer.active:
+                    visualization = trainer.draw(visualization)
+                
                 screen.blit(visualization, (0, 0))
                 
                 # Draw instructions
                 font = pygame.font.SysFont(None, 24)
+                
+                # Basic instructions
                 instructions = [
                     "Press ESC to exit",
                     "Move the joystick to control attacks",
@@ -113,6 +182,20 @@ def main():
                     f"Sector change cooldown: {SECTOR_CHANGE_COOLDOWN*1000:.0f}ms to prevent double hits",
                     "Hold ALT for alternative mode: Joystick moves cursor and holds right mouse button"
                 ]
+                
+                # Training mode instructions
+                training_instructions = [
+                    "--- Training Mode ---",
+                    "Press T to toggle training mode",
+                    "Press 1-5 to change difficulty",
+                    "1=Easy, 2=Medium, 3=Hard, 4=Expert, 5=Master",
+                    "Move to highlighted sectors - targets complete instantly",
+                    "The higher the difficulty, the faster the targets change"
+                ]
+                
+                # Add training instructions if trainer is available
+                if trainer:
+                    instructions.extend(training_instructions)
                 
                 for i, instruction in enumerate(instructions):
                     text = font.render(instruction, True, VISUALIZATION["text_color"])
