@@ -101,10 +101,19 @@ def main():
                         running = False
                     # Training mode controls
                     elif event.key == pygame.K_t and trainer:
-                        # Toggle training mode
+                        # Toggle regular training mode
                         if not trainer.active:
-                            print("Starting training exercise...")
-                            trainer.start_exercise("random_targets", difficulty=1, duration=60)
+                            print("Starting regular training exercise...")
+                            trainer.start_exercise("random_targets", difficulty=1, duration=60, alt_mode=False)
+                        else:
+                            print("Stopping training exercise...")
+                            trainer.stop_exercise()
+                    
+                    elif event.key == pygame.K_y and trainer:
+                        # Toggle alternative training mode
+                        if not trainer.active:
+                            print("Starting alternative training exercise (circle targets)...")
+                            trainer.start_exercise("circle_targets", difficulty=1, duration=60, alt_mode=True)
                         else:
                             print("Stopping training exercise...")
                             trainer.stop_exercise()
@@ -186,11 +195,12 @@ def main():
                 # Training mode instructions
                 training_instructions = [
                     "--- Training Mode ---",
-                    "Press T to toggle training mode",
+                    "Press T for sector training mode",
+                    "Press Y for precision circle training mode",
                     "Press 1-5 to change difficulty",
                     "1=Easy, 2=Medium, 3=Hard, 4=Expert, 5=Master",
-                    "Move to highlighted sectors - targets complete instantly",
-                    "The higher the difficulty, the faster the targets change"
+                    "Sector mode: Move to highlighted sectors - targets complete instantly",
+                    "Circle mode: Move green cursor inside circle targets - stay within circle"
                 ]
                 
                 # Add training instructions if trainer is available
