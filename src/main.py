@@ -106,8 +106,11 @@ def main():
                             print("Starting regular training exercise...")
                             trainer.start_exercise("random_targets", difficulty=1, duration=60, alt_mode=False)
                         else:
-                            print("Stopping training exercise...")
-                            trainer.stop_exercise()
+                            print("Exiting training mode without showing results...")
+                            # Directly deactivate trainer without showing results
+                            trainer.showing_results = False
+                            trainer.active = False
+                            trainer.current_exercise = None
                     
                     elif event.key == pygame.K_y and trainer:
                         # Toggle alternative training mode
@@ -115,8 +118,11 @@ def main():
                             print("Starting alternative training exercise (circle targets)...")
                             trainer.start_exercise("circle_targets", difficulty=1, duration=60, alt_mode=True)
                         else:
-                            print("Stopping training exercise...")
-                            trainer.stop_exercise()
+                            print("Exiting training mode without showing results...")
+                            # Directly deactivate trainer without showing results
+                            trainer.showing_results = False
+                            trainer.active = False
+                            trainer.current_exercise = None
                     elif event.key == pygame.K_1 and trainer:
                         if not trainer.active:
                             # Start easy training
