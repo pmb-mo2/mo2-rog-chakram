@@ -1,6 +1,6 @@
 # Chakram X Alternative Control System for Mortal Online 2
 
-This is a prototype for an alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode.
+This is a powerful alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode. It features an adaptive control system with advanced movement prediction, combat mode, training exercises, and customizable settings.
 
 ## Table of Contents
 
@@ -10,6 +10,10 @@ This is a prototype for an alternative control system for Mortal Online 2 using 
 - [Installation](#installation)
 - [Usage](#usage)
 - [How It Works](#how-it-works)
+- [Adaptive Control System](#adaptive-control-system)
+- [Combat Mode](#combat-mode)
+- [Alternative Mode](#alternative-mode)
+- [Training Mode](#training-mode)
 - [Configuration](#configuration)
 - [Input System](#input-system)
 - [Troubleshooting](#troubleshooting)
@@ -26,7 +30,7 @@ This is a prototype for an alternative control system for Mortal Online 2 using 
 - Mortal Online 2
 
 ## Showcase 
-### Speed & responsives demo
+### Speed & responsiveness demo
 [![Speed Demo](https://img.youtube.com/vi/m3KuTYRgOfo/hqdefault.jpg)](https://youtu.be/m3KuTYRgOfo)
 
 ### Swapping attacks slowly demo
@@ -89,9 +93,26 @@ The configuration editor allows you to:
 - Adjust the deadzone size
 - Customize sector boundaries
 - Change key mappings
+- Configure adaptive control settings
+- Toggle combat mode features
+- Adjust alternative mode settings
 - Modify visualization settings
 
 All settings are saved to `~/.chakram_controller/config.json` and will be loaded automatically when you start the application.
+
+### Training Mode
+
+The application includes a training mode to help you practice using the controller effectively:
+
+- **Random Targets Exercise**: Practice hitting randomly appearing sectors
+- **Circle Targets Exercise**: Practice precision control with moving targets
+
+To activate training mode, press:
+- `T` to start the sector training mode
+- `Y` to start the precision circle training mode
+- `1-5` to change difficulty levels (1=Easy, 5=Master)
+
+Training mode helps you build muscle memory for quick and accurate attacks in the game.
 
 ### Headless Mode
 
@@ -136,17 +157,59 @@ When you move the joystick:
 2. Moving from one sector to another first presses the cancel button (middle mouse button), releases the current attack key, releases the cancel button, and then presses the new attack key
 3. Returning to the neutral position releases all keys
 
-### Alternative Mode
+## Adaptive Control System
+
+The adaptive control system is a powerful feature that adjusts controller behavior based on your movement patterns:
+
+### Dynamic Deadzone
+- Automatically adjusts deadzone size based on your movement speed and game state
+- Smaller deadzone for quick, precise movements
+- Larger deadzone for slower, more deliberate movements
+- Prevents accidental sector changes during combat
+
+### Movement Prediction
+- Predicts your intended sector changes before you complete the motion
+- Provides faster, more responsive control
+- Increases accuracy during fast-paced combat
+- Adapts to your personal movement style over time
+
+### Smart Transitions
+- Adjusts transition timing based on your movement speed
+- Optimizes for smooth, reliable sector changes
+- Prevents accidental double-hits or missed inputs
+- Provides consistent control regardless of movement speed
+
+To enable or disable adaptive control features, use the configuration editor:
+```bash
+python run.py --config
+```
+
+## Combat Mode
+
+Combat mode provides optimized controller settings for combat situations:
+
+- **Reduced Deadzone**: Smaller deadzone for faster, more responsive attacks
+- **Faster Transitions**: Quicker transitions between attack directions
+- **Optimized Prediction**: Enhanced movement prediction during combat
+- **Automatic Detection**: Can automatically detect when you're in combat (optional)
+
+To toggle combat mode:
+- Press the combat mode key (default: `C`)
+- Press the second joystick button (if available)
+
+Combat mode status is displayed in the visualization window.
+
+## Alternative Mode
 
 The application also features an alternative mode that can be activated by holding down a configurable key (default: left Alt). This mode is designed for different gameplay scenarios and works as follows:
 
 When alternative mode is active:
 1. Moving the joystick from the neutral position to a sector:
-   - Moves the cursor 50px (configurable) in the corresponding direction
+   - Moves the cursor 20px (configurable) in the corresponding direction
    - Presses and holds the right mouse button
 2. Moving from one sector to another:
    - Releases the right mouse button
-   - Moves the cursor 50px (configurable) in the new direction
+   - Moves the cursor 20px (configurable) in the new direction
    - Presses and holds the right mouse button again
 3. Returning to the neutral position (center) releases the right mouse button
 
@@ -157,6 +220,26 @@ The sector mapping in alternative mode:
 - **Right sector** (Thrust): Moves cursor right
 
 To toggle between standard and alternative modes, simply hold or release the alternative mode key (default: left Alt).
+
+## Training Mode
+
+The training mode helps you practice and improve your skills with the controller:
+
+### Random Targets Exercise
+- Targets appear in random sectors
+- You must move the joystick to the highlighted sector
+- Trains rapid, accurate sector changes
+- Measures response time and accuracy
+
+### Circle Targets Exercise
+- Circular targets appear at various positions
+- You must move and hold the cursor within the circle
+- Trains precise cursor control using the alternative mode
+- Measures time-on-target and precision
+
+Both exercises feature 5 difficulty levels (Easy to Master) that adjust target size, appearance rate, and movement speed.
+
+Training statistics are displayed at the end of each session, helping you track your progress over time.
 
 ## Configuration
 
@@ -171,9 +254,18 @@ This provides a user-friendly interface to adjust:
 - **Deadzone**: Radius of the center deadzone (0.0 to 0.5)
 - **Release Delay**: Time between releasing attack and cancel buttons (in seconds)
 - **Sector Change Cooldown**: Minimum time between sector changes to prevent double hits (in seconds)
+- **Adaptive Control Settings**:
+  - **Dynamic Deadzone**: Enable/disable and adjust min/max factors
+  - **Movement Prediction**: Enable/disable and adjust prediction time and confidence threshold
+  - **Transition Smoothness**: Adjust base smoothness and min/max factors
+- **Combat Mode Settings**:
+  - **Combat Mode Key**: Key to toggle combat mode (default: C)
+  - **Combat Deadzone**: Smaller deadzone size for combat mode
+  - **Combat Transition Smoothness**: Faster transitions for combat mode
+  - **Combat Detection**: Enable/disable automatic combat detection
 - **Alternative Mode Settings**:
   - **Alt Mode Key**: Key to hold for activating alternative mode (default: left Alt)
-  - **Cursor Offset**: Distance in pixels to move the cursor in alternative mode (default: 50px)
+  - **Cursor Offset**: Distance in pixels to move the cursor in alternative mode (default: 20px)
 - **Sector Boundaries**: Angle ranges for each attack direction
 - **Key Mappings**: Keyboard keys for each action
 - **Visualization Settings**: Window size and appearance
@@ -222,6 +314,21 @@ If you have issues with key presses not being detected in Mortal Online 2:
 3. Try installing the Interception driver for more reliable input simulation
 4. If using the Interception driver, make sure it's properly installed and running
 5. Run the application as administrator: right-click `run.py` and select "Run as administrator"
+
+### Adaptive Control Issues
+
+If the adaptive control system isn't working as expected:
+1. Make sure adaptive control is enabled in the configuration
+2. Try adjusting the sensitivity parameters in the configuration editor
+3. Reset to default settings if you've made extensive changes
+4. Try disabling individual features (dynamic deadzone, prediction) to isolate issues
+
+### Combat Mode Issues
+
+If combat mode isn't working properly:
+1. Verify the combat mode key is correctly set in the configuration
+2. Check if automatic game state detection is interfering with manual toggling
+3. Try adjusting the combat timeout value if it's switching out of combat too quickly
 
 ### Interception Driver Issues
 

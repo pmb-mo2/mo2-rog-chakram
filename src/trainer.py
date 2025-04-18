@@ -143,8 +143,7 @@ class ChakramTrainer:
         if self.use_alt_mode:
             # Extract joystick coordinates from controller info
             # These should be normalized values between -1 and 1
-            raw_x = controller_info.get("x", 0)
-            raw_y = controller_info.get("y", 0)
+            raw_x, raw_y = controller_info.get("position", (0, 0))
             
             # Print raw values for debugging
             print(f"DEBUG: Raw joystick values: x={raw_x}, y={raw_y}")
@@ -445,7 +444,7 @@ class ChakramTrainer:
         surface.blit(countdown_text, countdown_rect)
         
     def _draw_alt_target(self, surface):
-        """Draw the sector-shaped target and cursor for the alternative mode."""
+        """Draw the sector-shaped target for the alternative mode."""
         try:
             # Get center and dimensions
             center_x = getattr(self.visualizer, 'center_x', 400)
@@ -514,9 +513,7 @@ class ChakramTrainer:
             text_rect = range_text.get_rect(center=(text_x, text_y))
             surface.blit(range_text, text_rect)
             
-            # Draw the cursor (green dot)
-            cursor_color = (0, 255, 0)
-            pygame.draw.circle(surface, cursor_color, self.cursor_position, 5)
+            # No longer drawing a separate cursor - we use the joystick's green dot
             
             # Draw line from center to cursor for reference
             reference_color = (150, 150, 150, 128)

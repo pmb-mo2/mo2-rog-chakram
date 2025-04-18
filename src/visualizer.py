@@ -223,7 +223,7 @@ class Visualizer:
             1
         )
         
-        # Draw the joystick position
+        # Draw the joystick position (green dot)
         pygame.draw.circle(
             self.surface,
             VISUALIZATION["joystick_color"],
