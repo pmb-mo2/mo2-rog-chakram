@@ -26,13 +26,13 @@ DEFAULT_SECTOR_CHANGE_COOLDOWN = 0.0
 DEFAULT_ADAPTIVE_ENABLED = True
 
 # Dynamic deadzone settings
-DEFAULT_DYNAMIC_DEADZONE_ENABLED = True
-DEFAULT_DYNAMIC_DEADZONE_MIN_FACTOR = 0.8  # Minimum multiplier for deadzone (fast movements)
+DEFAULT_DYNAMIC_DEADZONE_ENABLED = False
+DEFAULT_DYNAMIC_DEADZONE_MIN_FACTOR = 1.5  # Minimum multiplier for deadzone (fast movements)
 DEFAULT_DYNAMIC_DEADZONE_MAX_FACTOR = 1.5  # Maximum multiplier for deadzone (slow movements)
 
 # Movement prediction settings
 DEFAULT_PREDICTION_ENABLED = True
-DEFAULT_PREDICTION_TIME = 0.1  # Time in seconds to predict ahead
+DEFAULT_PREDICTION_TIME = 0.05  # Time in seconds to predict ahead
 DEFAULT_PREDICTION_CONFIDENCE_THRESHOLD = 0.3  # Minimum confidence to use predictions
 
 # Transition smoothness settings
