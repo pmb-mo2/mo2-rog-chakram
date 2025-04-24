@@ -45,16 +45,17 @@ This is an alternative control system for Mortal Online 2 using the Chakram X mo
 ### Swapping Between 2 Attacks Demo
 [![Swapping Between 2 Attacks](https://img.youtube.com/vi/Vz8Ny_bGD6U/hqdefault.jpg)](https://youtu.be/Vz8Ny_bGD6U)
 
-## Quickstart
+## Quickstart | python version
 
 1. Install the required dependencies and drivers (see [Installation](#installation))
 2. Configure your Chakram X mouse to use analog joystick mode
-3. Start the tool with `python run.py`
+3. Start the tool with `python run.py` or download binary version and start with `run.exe`
 4. Launch Mortal Online 2
 5. In MO2 settings:
    - Set attack style to "movement keys"
    - Set attack buttons to arrow keys
    - Enable "button charges attack" option
+   - Set feint to MOUSE3
 6. Return to the game and enjoy enhanced control!
 
 For advanced configuration options, run `python run.py --config` to open the configuration editor.
@@ -63,7 +64,7 @@ For advanced configuration options, run `python run.py --config` to open the con
 
 1. Clone this repository or download the files:
    ```bash
-   git clone https://github.com/yourusername/mo2-rog-chakram.git
+   git clone https://github.com/pmb-mo2/mo2-rog-chakram.git
    cd mo2-rog-chakram
    ```
 
