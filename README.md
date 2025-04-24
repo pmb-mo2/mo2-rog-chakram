@@ -1,6 +1,6 @@
 # Chakram X Alternative Control System for Mortal Online 2
 
-This is a powerful alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode. It features an adaptive control system with advanced movement prediction, combat mode, training exercises, and customizable settings.
+This is an alternative control system for Mortal Online 2 using the Chakram X mouse joystick in analog mode. It features an adaptive control system with advanced movement prediction, combat mode, training exercises, and customizable settings.
 
 ## Table of Contents
 
@@ -30,11 +30,20 @@ This is a powerful alternative control system for Mortal Online 2 using the Chak
 - Mortal Online 2
 
 ## Showcase 
-### Speed & responsiveness demo
-[![Speed Demo](https://img.youtube.com/vi/m3KuTYRgOfo/hqdefault.jpg)](https://youtu.be/m3KuTYRgOfo)
+### Swapping Blocks and Attacks Demo
+[![Swapping Blocks and Attacks Demo](https://img.youtube.com/vi/NKblz9ZrwEw/hqdefault.jpg)](https://youtu.be/NKblz9ZrwEw)
 
-### Swapping attacks slowly demo
-[![Swapping Demo](https://img.youtube.com/vi/zsD-gLbEgz8/hqdefault.jpg)](https://www.youtube.com/watch?v=zsD-gLbEgz8)
+### Random Targets Exercise Demo
+[![Training Type 1 Demo](https://img.youtube.com/vi/GUGOk6ite6w/hqdefault.jpg)](https://youtu.be/GUGOk6ite6w)
+
+### Circle Targets Exercise Demo
+[![Training Type 2 Demo](https://img.youtube.com/vi/Ac4GGqok_xM/hqdefault.jpg)](https://youtu.be/Ac4GGqok_xM)
+
+### Swapping Attacks Demo (slowly)
+[![Swapping Attacks Demo (slowly)](https://img.youtube.com/vi/yTiKB-XuKkQ/hqdefault.jpg)](https://youtu.be/yTiKB-XuKkQ)
+
+### Swapping Between 2 Attacks Demo
+[![Swapping Between 2 Attacks](https://img.youtube.com/vi/Vz8Ny_bGD6U/hqdefault.jpg)](https://youtu.be/Vz8Ny_bGD6U)
 
 ## Quickstart
 
