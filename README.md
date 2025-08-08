@@ -279,6 +279,9 @@ This provides a user-friendly interface to adjust:
 - **Mouse Axes Mode**:
   - **use_mouse_axes**: Set to `true` to derive joystick axes from mouse movement when modifiers are not held
   - **mouse_axes_modifiers**: List of keys or mouse buttons that temporarily disable mouse axes while pressed
+  - **mouse_axes_pointer_lock**: Return the cursor to an anchor position each frame to hide movement (default: `true`)
+  - **mouse_axes_lock_center**: Keep the anchor fixed at its first position or let it drift with movement
+  - **mouse_axes_invert_y**: Invert the Y axis for mouse-derived joystick movement
 - **Sector Boundaries**: Angle ranges for each attack direction
 - **Key Mappings**: Keyboard keys for each action
 - **Visualization Settings**: Window size and appearance
@@ -289,6 +292,10 @@ Alternatively, you can manually edit the configuration file located at:
 ```
 ~/.chakram_controller/config.json
 ```
+
+### Mouse Axes Pointer Lock (Windows/X11)
+
+Enabling `mouse_axes_pointer_lock` hides mouse movement from other applications by returning the cursor to an anchor position using native Win32 or X11 APIs. The anchor is locked to its initial position when `mouse_axes_lock_center` is `true`, but it can float if set to `false`. Use `mouse_axes_invert_y` to flip the vertical axis if needed.
 
 ## Input System
 
