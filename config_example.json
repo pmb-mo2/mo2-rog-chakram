@@ -3,5 +3,13 @@
   "mouse_axes_modifiers": ["alt", "mouse4"],
   "mouse_axes_pointer_lock": true,
   "mouse_axes_lock_center": true,
-  "mouse_axes_invert_y": false
+  "mouse_axes_invert_y": false,
+  "attack_on_modifier_release": true,
+  "aim_modifier": "alt",
+  "aim_requires_movement": true,
+  "aim_direction_memory_ms": 250,
+  "attack_press_duration_ms": 50,
+  "post_attack_cooldown_ms": 200,
+  "block_while_held": true,
+  "block_key": "right_mouse"
 }

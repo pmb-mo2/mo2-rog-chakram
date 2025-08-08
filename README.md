@@ -297,6 +297,17 @@ Alternatively, you can manually edit the configuration file located at:
 
 Enabling `mouse_axes_pointer_lock` hides mouse movement from other applications by returning the cursor to an anchor position using native Win32 or X11 APIs. The anchor is locked to its initial position when `mouse_axes_lock_center` is `true`, but it can float if set to `false`. Use `mouse_axes_invert_y` to flip the vertical axis if needed.
 
+### Attack on Modifier Release
+
+To perform attacks when releasing a modifier:
+
+- Enable mouse axes mode: `use_mouse_axes = true`
+- Turn on release attacks: `attack_on_modifier_release = true`
+- Choose the aiming modifier (must be in `mouse_axes_modifiers`), e.g. `aim_modifier = "alt"`
+- Optional: hold a block while aiming with `block_while_held = true` and set `block_key` (default `"right_mouse"`)
+
+While the modifier is held, moving the mouse selects an attack direction; releasing it presses and releases the corresponding attack key. Set `mouse_axes_invert_y = true` if the vertical direction feels inverted.
+
 ## Input System
 
 The application uses a sophisticated input system with two implementations:

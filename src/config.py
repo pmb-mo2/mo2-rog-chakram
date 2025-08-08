@@ -56,6 +56,14 @@ DEFAULT_MOUSE_AXES_MODIFIERS = []
 DEFAULT_MOUSE_AXES_POINTER_LOCK = True
 DEFAULT_MOUSE_AXES_LOCK_CENTER = True
 DEFAULT_MOUSE_AXES_INVERT_Y = False
+DEFAULT_ATTACK_ON_MODIFIER_RELEASE = True
+DEFAULT_AIM_MODIFIER = "alt"
+DEFAULT_AIM_REQUIRES_MOVEMENT = True
+DEFAULT_AIM_DIRECTION_MEMORY_MS = 250
+DEFAULT_ATTACK_PRESS_DURATION_MS = 50
+DEFAULT_POST_ATTACK_COOLDOWN_MS = 200
+DEFAULT_BLOCK_WHILE_HELD = True
+DEFAULT_BLOCK_KEY = "right_mouse"
 
 # Game state detection settings
 DEFAULT_GAME_STATE_DETECTION_ENABLED = True
@@ -131,6 +139,14 @@ def load_user_config():
                 "mouse_axes_pointer_lock": user_config.get("mouse_axes_pointer_lock", DEFAULT_MOUSE_AXES_POINTER_LOCK),
                 "mouse_axes_lock_center": user_config.get("mouse_axes_lock_center", DEFAULT_MOUSE_AXES_LOCK_CENTER),
                 "mouse_axes_invert_y": user_config.get("mouse_axes_invert_y", DEFAULT_MOUSE_AXES_INVERT_Y),
+                "attack_on_modifier_release": user_config.get("attack_on_modifier_release", DEFAULT_ATTACK_ON_MODIFIER_RELEASE),
+                "aim_modifier": user_config.get("aim_modifier", DEFAULT_AIM_MODIFIER),
+                "aim_requires_movement": user_config.get("aim_requires_movement", DEFAULT_AIM_REQUIRES_MOVEMENT),
+                "aim_direction_memory_ms": user_config.get("aim_direction_memory_ms", DEFAULT_AIM_DIRECTION_MEMORY_MS),
+                "attack_press_duration_ms": user_config.get("attack_press_duration_ms", DEFAULT_ATTACK_PRESS_DURATION_MS),
+                "post_attack_cooldown_ms": user_config.get("post_attack_cooldown_ms", DEFAULT_POST_ATTACK_COOLDOWN_MS),
+                "block_while_held": user_config.get("block_while_held", DEFAULT_BLOCK_WHILE_HELD),
+                "block_key": user_config.get("block_key", DEFAULT_BLOCK_KEY),
                 "sectors": user_config.get("sectors", DEFAULT_SECTORS),
                 "key_mappings": user_config.get("key_mappings", DEFAULT_KEY_MAPPINGS),
                 "visualization": user_config.get("visualization", DEFAULT_VISUALIZATION),
@@ -178,6 +194,14 @@ def load_user_config():
         "mouse_axes_pointer_lock": DEFAULT_MOUSE_AXES_POINTER_LOCK,
         "mouse_axes_lock_center": DEFAULT_MOUSE_AXES_LOCK_CENTER,
         "mouse_axes_invert_y": DEFAULT_MOUSE_AXES_INVERT_Y,
+        "attack_on_modifier_release": DEFAULT_ATTACK_ON_MODIFIER_RELEASE,
+        "aim_modifier": DEFAULT_AIM_MODIFIER,
+        "aim_requires_movement": DEFAULT_AIM_REQUIRES_MOVEMENT,
+        "aim_direction_memory_ms": DEFAULT_AIM_DIRECTION_MEMORY_MS,
+        "attack_press_duration_ms": DEFAULT_ATTACK_PRESS_DURATION_MS,
+        "post_attack_cooldown_ms": DEFAULT_POST_ATTACK_COOLDOWN_MS,
+        "block_while_held": DEFAULT_BLOCK_WHILE_HELD,
+        "block_key": DEFAULT_BLOCK_KEY,
         "sectors": DEFAULT_SECTORS,
         "key_mappings": DEFAULT_KEY_MAPPINGS,
         "visualization": DEFAULT_VISUALIZATION,
@@ -227,6 +251,14 @@ MOUSE_AXES_MODIFIERS = user_config.get("mouse_axes_modifiers", DEFAULT_MOUSE_AXE
 MOUSE_AXES_POINTER_LOCK = user_config.get("mouse_axes_pointer_lock", DEFAULT_MOUSE_AXES_POINTER_LOCK)
 MOUSE_AXES_LOCK_CENTER = user_config.get("mouse_axes_lock_center", DEFAULT_MOUSE_AXES_LOCK_CENTER)
 MOUSE_AXES_INVERT_Y = user_config.get("mouse_axes_invert_y", DEFAULT_MOUSE_AXES_INVERT_Y)
+ATTACK_ON_MODIFIER_RELEASE = user_config.get("attack_on_modifier_release", DEFAULT_ATTACK_ON_MODIFIER_RELEASE)
+AIM_MODIFIER = user_config.get("aim_modifier", DEFAULT_AIM_MODIFIER)
+AIM_REQUIRES_MOVEMENT = user_config.get("aim_requires_movement", DEFAULT_AIM_REQUIRES_MOVEMENT)
+AIM_DIRECTION_MEMORY_MS = user_config.get("aim_direction_memory_ms", DEFAULT_AIM_DIRECTION_MEMORY_MS)
+ATTACK_PRESS_DURATION_MS = user_config.get("attack_press_duration_ms", DEFAULT_ATTACK_PRESS_DURATION_MS)
+POST_ATTACK_COOLDOWN_MS = user_config.get("post_attack_cooldown_ms", DEFAULT_POST_ATTACK_COOLDOWN_MS)
+BLOCK_WHILE_HELD = user_config.get("block_while_held", DEFAULT_BLOCK_WHILE_HELD)
+BLOCK_KEY = user_config.get("block_key", DEFAULT_BLOCK_KEY)
 SECTORS = user_config["sectors"]
 KEY_MAPPINGS = user_config["key_mappings"]
 VISUALIZATION = user_config["visualization"]
