@@ -18,7 +18,10 @@ from src.config import (
     COMBAT_MODE_ENABLED, COMBAT_MODE_KEY, COMBAT_MODE_DEADZONE, COMBAT_MODE_TRANSITION_SMOOTHNESS,
     GAME_STATE_DETECTION_ENABLED, COMBAT_TIMEOUT,
     USE_MOUSE_AXES, MOUSE_AXES_MODIFIERS, MOUSE_AXES_POINTER_LOCK,
-    MOUSE_AXES_LOCK_CENTER, MOUSE_AXES_INVERT_Y
+    MOUSE_AXES_LOCK_CENTER, MOUSE_AXES_INVERT_Y,
+    ATTACK_ON_MODIFIER_RELEASE, AIM_MODIFIER, AIM_REQUIRES_MOVEMENT,
+    AIM_DIRECTION_MEMORY_MS, ATTACK_PRESS_DURATION_MS, POST_ATTACK_COOLDOWN_MS,
+    BLOCK_WHILE_HELD, BLOCK_KEY
 )
 from src.movement_analyzer import MovementAnalyzer
 from src.game_state_detector import GameStateDetector
@@ -36,6 +39,14 @@ class ChakramController:
                 pointer_lock=MOUSE_AXES_POINTER_LOCK,
                 lock_center=MOUSE_AXES_LOCK_CENTER,
                 invert_y=MOUSE_AXES_INVERT_Y,
+                attack_on_modifier_release=ATTACK_ON_MODIFIER_RELEASE,
+                aim_modifier=AIM_MODIFIER,
+                aim_requires_movement=AIM_REQUIRES_MOVEMENT,
+                aim_direction_memory_ms=AIM_DIRECTION_MEMORY_MS,
+                attack_press_duration_ms=ATTACK_PRESS_DURATION_MS,
+                post_attack_cooldown_ms=POST_ATTACK_COOLDOWN_MS,
+                block_while_held=BLOCK_WHILE_HELD,
+                block_key=BLOCK_KEY,
             )
             if self.use_mouse_axes
             else None
