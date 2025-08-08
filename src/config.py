@@ -50,6 +50,10 @@ DEFAULT_COMBAT_MODE_TRANSITION_SMOOTHNESS = 0.05  # Faster transitions for comba
 DEFAULT_ALT_MODE_KEY = "alt"  # Default key to activate alternative mode
 DEFAULT_ALT_MODE_CURSOR_OFFSET = 20  # Default cursor movement distance in pixels
 
+# Mouse axes settings
+DEFAULT_USE_MOUSE_AXES = False
+DEFAULT_MOUSE_AXES_MODIFIERS = []
+
 # Game state detection settings
 DEFAULT_GAME_STATE_DETECTION_ENABLED = True
 DEFAULT_COMBAT_TIMEOUT = 5.0  # Time in seconds after last combat action to exit combat state
@@ -119,6 +123,8 @@ def load_user_config():
                 "sector_change_cooldown": user_config.get("sector_change_cooldown", DEFAULT_SECTOR_CHANGE_COOLDOWN),
                 "alt_mode_key": user_config.get("alt_mode_key", DEFAULT_ALT_MODE_KEY),
                 "alt_mode_cursor_offset": user_config.get("alt_mode_cursor_offset", DEFAULT_ALT_MODE_CURSOR_OFFSET),
+                "use_mouse_axes": user_config.get("use_mouse_axes", DEFAULT_USE_MOUSE_AXES),
+                "mouse_axes_modifiers": user_config.get("mouse_axes_modifiers", DEFAULT_MOUSE_AXES_MODIFIERS),
                 "sectors": user_config.get("sectors", DEFAULT_SECTORS),
                 "key_mappings": user_config.get("key_mappings", DEFAULT_KEY_MAPPINGS),
                 "visualization": user_config.get("visualization", DEFAULT_VISUALIZATION),
@@ -205,6 +211,8 @@ RELEASE_DELAY = user_config["release_delay"]
 SECTOR_CHANGE_COOLDOWN = user_config.get("sector_change_cooldown", DEFAULT_SECTOR_CHANGE_COOLDOWN)
 ALT_MODE_KEY = user_config.get("alt_mode_key", DEFAULT_ALT_MODE_KEY)
 ALT_MODE_CURSOR_OFFSET = user_config.get("alt_mode_cursor_offset", DEFAULT_ALT_MODE_CURSOR_OFFSET)
+USE_MOUSE_AXES = user_config.get("use_mouse_axes", DEFAULT_USE_MOUSE_AXES)
+MOUSE_AXES_MODIFIERS = user_config.get("mouse_axes_modifiers", DEFAULT_MOUSE_AXES_MODIFIERS)
 SECTORS = user_config["sectors"]
 KEY_MAPPINGS = user_config["key_mappings"]
 VISUALIZATION = user_config["visualization"]

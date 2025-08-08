@@ -276,6 +276,9 @@ This provides a user-friendly interface to adjust:
 - **Alternative Mode Settings**:
   - **Alt Mode Key**: Key to hold for activating alternative mode (default: left Alt)
   - **Cursor Offset**: Distance in pixels to move the cursor in alternative mode (default: 20px)
+- **Mouse Axes Mode**:
+  - **use_mouse_axes**: Set to `true` to derive joystick axes from mouse movement when modifiers are not held
+  - **mouse_axes_modifiers**: List of keys or mouse buttons that temporarily disable mouse axes while pressed
 - **Sector Boundaries**: Angle ranges for each attack direction
 - **Key Mappings**: Keyboard keys for each action
 - **Visualization Settings**: Window size and appearance
