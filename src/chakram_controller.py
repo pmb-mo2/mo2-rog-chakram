@@ -10,21 +10,26 @@ import queue
 import pygame
 from src.win_input import key_down, key_up, send_sector_change, right_mouse_down, right_mouse_up, move_mouse, get_cursor_position
 from src.config import (
-    SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_TIME_THRESHOLD, DEADZONE_SPEED_THRESHOLD, 
+    SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_TIME_THRESHOLD, DEADZONE_SPEED_THRESHOLD,
     RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, ALT_MODE_KEY, ALT_MODE_CURSOR_OFFSET,
     ADAPTIVE_ENABLED, DYNAMIC_DEADZONE_ENABLED, DYNAMIC_DEADZONE_MIN_FACTOR, DYNAMIC_DEADZONE_MAX_FACTOR,
     PREDICTION_ENABLED, PREDICTION_TIME, PREDICTION_CONFIDENCE_THRESHOLD,
     TRANSITION_SMOOTHNESS, TRANSITION_MIN_FACTOR, TRANSITION_MAX_FACTOR,
     COMBAT_MODE_ENABLED, COMBAT_MODE_KEY, COMBAT_MODE_DEADZONE, COMBAT_MODE_TRANSITION_SMOOTHNESS,
-    GAME_STATE_DETECTION_ENABLED, COMBAT_TIMEOUT
+    GAME_STATE_DETECTION_ENABLED, COMBAT_TIMEOUT,
+    USE_MOUSE_AXES, MOUSE_AXES_MODIFIERS
 )
 from src.movement_analyzer import MovementAnalyzer
 from src.game_state_detector import GameStateDetector
+from src.mouse_axes import MouseAxes
 
 class ChakramController:
     def __init__(self):
         """Initialize the controller."""
         self.joystick = None
+        self.use_mouse_axes = USE_MOUSE_AXES
+        self.mouse_axes = MouseAxes(MOUSE_AXES_MODIFIERS) if self.use_mouse_axes else None
+        print(f"use_mouse_axes={self.use_mouse_axes}, modifiers={MOUSE_AXES_MODIFIERS}")
         self.current_sector = None
         self.current_state = None  # "neutral", "cancel", "attack"
         self.pressed_keys = set()
@@ -114,6 +119,10 @@ class ChakramController:
         Initialize the joystick.
         If joystick_id is None, it will try to find the first working Chakram X joystick.
         """
+        if self.use_mouse_axes:
+            if self.mouse_axes:
+                self.mouse_axes.initialize()
+            return True
         if joystick_id is not None:
             # Try to initialize the specified joystick
             try:
@@ -202,9 +211,10 @@ class ChakramController:
     
     def get_joystick_position(self):
         """Get the current joystick position as (x, y) coordinates."""
+        if self.use_mouse_axes and self.mouse_axes:
+            return self.mouse_axes.get_axes()
         if not self.joystick:
             return (0, 0)
-        
         x = self.joystick.get_axis(0)
         y = self.joystick.get_axis(1)
         return (x, y)
