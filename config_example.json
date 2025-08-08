@@ -1,0 +1,7 @@
+{
+  "use_mouse_axes": true,
+  "mouse_axes_modifiers": ["alt", "mouse4"],
+  "mouse_axes_pointer_lock": true,
+  "mouse_axes_lock_center": true,
+  "mouse_axes_invert_y": false
+}

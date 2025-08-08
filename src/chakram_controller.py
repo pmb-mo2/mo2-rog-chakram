@@ -17,7 +17,8 @@ from src.config import (
     TRANSITION_SMOOTHNESS, TRANSITION_MIN_FACTOR, TRANSITION_MAX_FACTOR,
     COMBAT_MODE_ENABLED, COMBAT_MODE_KEY, COMBAT_MODE_DEADZONE, COMBAT_MODE_TRANSITION_SMOOTHNESS,
     GAME_STATE_DETECTION_ENABLED, COMBAT_TIMEOUT,
-    USE_MOUSE_AXES, MOUSE_AXES_MODIFIERS
+    USE_MOUSE_AXES, MOUSE_AXES_MODIFIERS, MOUSE_AXES_POINTER_LOCK,
+    MOUSE_AXES_LOCK_CENTER, MOUSE_AXES_INVERT_Y
 )
 from src.movement_analyzer import MovementAnalyzer
 from src.game_state_detector import GameStateDetector
@@ -28,7 +29,17 @@ class ChakramController:
         """Initialize the controller."""
         self.joystick = None
         self.use_mouse_axes = USE_MOUSE_AXES
-        self.mouse_axes = MouseAxes(MOUSE_AXES_MODIFIERS) if self.use_mouse_axes else None
+        self.mouse_axes = (
+            MouseAxes(
+                MOUSE_AXES_MODIFIERS,
+                scale=ALT_MODE_CURSOR_OFFSET,
+                pointer_lock=MOUSE_AXES_POINTER_LOCK,
+                lock_center=MOUSE_AXES_LOCK_CENTER,
+                invert_y=MOUSE_AXES_INVERT_Y,
+            )
+            if self.use_mouse_axes
+            else None
+        )
         print(f"use_mouse_axes={self.use_mouse_axes}, modifiers={MOUSE_AXES_MODIFIERS}")
         self.current_sector = None
         self.current_state = None  # "neutral", "cancel", "attack"

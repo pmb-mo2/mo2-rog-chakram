@@ -53,6 +53,9 @@ DEFAULT_ALT_MODE_CURSOR_OFFSET = 20  # Default cursor movement distance in pixel
 # Mouse axes settings
 DEFAULT_USE_MOUSE_AXES = False
 DEFAULT_MOUSE_AXES_MODIFIERS = []
+DEFAULT_MOUSE_AXES_POINTER_LOCK = True
+DEFAULT_MOUSE_AXES_LOCK_CENTER = True
+DEFAULT_MOUSE_AXES_INVERT_Y = False
 
 # Game state detection settings
 DEFAULT_GAME_STATE_DETECTION_ENABLED = True
@@ -125,6 +128,9 @@ def load_user_config():
                 "alt_mode_cursor_offset": user_config.get("alt_mode_cursor_offset", DEFAULT_ALT_MODE_CURSOR_OFFSET),
                 "use_mouse_axes": user_config.get("use_mouse_axes", DEFAULT_USE_MOUSE_AXES),
                 "mouse_axes_modifiers": user_config.get("mouse_axes_modifiers", DEFAULT_MOUSE_AXES_MODIFIERS),
+                "mouse_axes_pointer_lock": user_config.get("mouse_axes_pointer_lock", DEFAULT_MOUSE_AXES_POINTER_LOCK),
+                "mouse_axes_lock_center": user_config.get("mouse_axes_lock_center", DEFAULT_MOUSE_AXES_LOCK_CENTER),
+                "mouse_axes_invert_y": user_config.get("mouse_axes_invert_y", DEFAULT_MOUSE_AXES_INVERT_Y),
                 "sectors": user_config.get("sectors", DEFAULT_SECTORS),
                 "key_mappings": user_config.get("key_mappings", DEFAULT_KEY_MAPPINGS),
                 "visualization": user_config.get("visualization", DEFAULT_VISUALIZATION),
@@ -167,6 +173,11 @@ def load_user_config():
         "deadzone_speed_threshold": DEFAULT_DEADZONE_SPEED_THRESHOLD,
         "release_delay": DEFAULT_RELEASE_DELAY,
         "sector_change_cooldown": DEFAULT_SECTOR_CHANGE_COOLDOWN,
+        "use_mouse_axes": DEFAULT_USE_MOUSE_AXES,
+        "mouse_axes_modifiers": DEFAULT_MOUSE_AXES_MODIFIERS,
+        "mouse_axes_pointer_lock": DEFAULT_MOUSE_AXES_POINTER_LOCK,
+        "mouse_axes_lock_center": DEFAULT_MOUSE_AXES_LOCK_CENTER,
+        "mouse_axes_invert_y": DEFAULT_MOUSE_AXES_INVERT_Y,
         "sectors": DEFAULT_SECTORS,
         "key_mappings": DEFAULT_KEY_MAPPINGS,
         "visualization": DEFAULT_VISUALIZATION,
@@ -213,6 +224,9 @@ ALT_MODE_KEY = user_config.get("alt_mode_key", DEFAULT_ALT_MODE_KEY)
 ALT_MODE_CURSOR_OFFSET = user_config.get("alt_mode_cursor_offset", DEFAULT_ALT_MODE_CURSOR_OFFSET)
 USE_MOUSE_AXES = user_config.get("use_mouse_axes", DEFAULT_USE_MOUSE_AXES)
 MOUSE_AXES_MODIFIERS = user_config.get("mouse_axes_modifiers", DEFAULT_MOUSE_AXES_MODIFIERS)
+MOUSE_AXES_POINTER_LOCK = user_config.get("mouse_axes_pointer_lock", DEFAULT_MOUSE_AXES_POINTER_LOCK)
+MOUSE_AXES_LOCK_CENTER = user_config.get("mouse_axes_lock_center", DEFAULT_MOUSE_AXES_LOCK_CENTER)
+MOUSE_AXES_INVERT_Y = user_config.get("mouse_axes_invert_y", DEFAULT_MOUSE_AXES_INVERT_Y)
 SECTORS = user_config["sectors"]
 KEY_MAPPINGS = user_config["key_mappings"]
 VISUALIZATION = user_config["visualization"]
