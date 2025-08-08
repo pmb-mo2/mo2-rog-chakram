@@ -39,6 +39,7 @@ class ChakramController:
                 pointer_lock=MOUSE_AXES_POINTER_LOCK,
                 lock_center=MOUSE_AXES_LOCK_CENTER,
                 invert_y=MOUSE_AXES_INVERT_Y,
+                # Attack on modifier release settings
                 attack_on_modifier_release=ATTACK_ON_MODIFIER_RELEASE,
                 aim_modifier=AIM_MODIFIER,
                 aim_requires_movement=AIM_REQUIRES_MOVEMENT,

@@ -299,14 +299,17 @@ Enabling `mouse_axes_pointer_lock` hides mouse movement from other applications 
 
 ### Attack on Modifier Release
 
-To perform attacks when releasing a modifier:
+Perform an attack when you let go of a modifier key.
 
-- Enable mouse axes mode: `use_mouse_axes = true`
-- Turn on release attacks: `attack_on_modifier_release = true`
-- Choose the aiming modifier (must be in `mouse_axes_modifiers`), e.g. `aim_modifier = "alt"`
-- Optional: hold a block while aiming with `block_while_held = true` and set `block_key` (default `"right_mouse"`)
+1. Enable mouse axes mode: `use_mouse_axes = true`
+2. Turn on release attacks: `attack_on_modifier_release = true`
+3. Set the aiming modifier (must be included in `mouse_axes_modifiers`): `aim_modifier = "h"`
+4. Require recent movement with `aim_requires_movement` (default `true`) and specify how long to remember the direction with `aim_direction_memory_ms`
+5. Control how long the attack key is held with `attack_press_duration_ms`
+6. Prevent rapid repeats by setting `post_attack_cooldown_ms`
+7. Optionally hold a block key while aiming: `block_while_held = true` and `block_key = "alt"`
 
-While the modifier is held, moving the mouse selects an attack direction; releasing it presses and releases the corresponding attack key. Set `mouse_axes_invert_y = true` if the vertical direction feels inverted.
+While the modifier is held, moving the mouse selects an attack direction; releasing it presses and releases the mapped attack key. Set `mouse_axes_invert_y = true` if the vertical axis feels reversed.
 
 ## Input System
 

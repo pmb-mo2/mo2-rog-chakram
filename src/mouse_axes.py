@@ -203,6 +203,7 @@ class MouseAxes:
             self.state = self.STATE_IDLE
 
         mod_pressed = self._is_modifier_pressed(self.aim_modifier) if self.aim_modifier else False
+        just_released = self.prev_mod_pressed and not mod_pressed
 
         dx = cur[0] - self.anchor[0]
         dy = cur[1] - self.anchor[1]
@@ -219,7 +220,7 @@ class MouseAxes:
                 _set_cursor_pos(*self.anchor)
             else:
                 self.anchor = cur
-            self.prev_mod_pressed = False
+            self.prev_mod_pressed = mod_pressed
             self.last_sector = None
             self.state = self.STATE_IDLE
             return 0.0, 0.0
@@ -228,6 +229,15 @@ class MouseAxes:
         if mod_pressed and self.state != self.STATE_COOLDOWN:
             if self.state == self.STATE_IDLE:
                 self.state = self.STATE_AIMING
+
+            if self.invert_y:
+                dy = -dy
+            x = max(-1.0, min(1.0, dx / self.scale))
+            y = max(-1.0, min(1.0, dy / self.scale))
+            sector = self._determine_sector(x, y)
+            if sector:
+                self.last_sector = sector
+                self.last_sector_ts = now_ms
 
             if self.block_while_held and not self.block_pressed:
                 self._press_block()
@@ -239,20 +249,11 @@ class MouseAxes:
             else:
                 self.anchor = cur
 
-            if self.invert_y:
-                dy = -dy
-            x = max(-1.0, min(1.0, dx / self.scale))
-            y = max(-1.0, min(1.0, dy / self.scale))
-            sector = self._determine_sector(x, y)
-            if sector:
-                self.last_sector = sector
-                self.last_sector_ts = now_ms
-
-            self.prev_mod_pressed = True
+            self.prev_mod_pressed = mod_pressed
             return 0.0, 0.0
 
         # Modifier just released
-        if self.prev_mod_pressed and not mod_pressed:
+        if just_released:
             if self.block_while_held:
                 self._release_block()
 
@@ -271,15 +272,15 @@ class MouseAxes:
                     attack_key = KEY_MAPPINGS.get(self.last_sector)
                     if attack_key:
                         key_down(attack_key)
-                        pygame.time.delay(self.attack_press_duration_ms)
+                        time.sleep(self.attack_press_duration_ms / 1000.0)
                         key_up(attack_key)
                         self.cooldown_until_ts = now_ms + self.post_attack_cooldown_ms
                         self.state = self.STATE_COOLDOWN
 
             self.last_sector = None
             self.last_sector_ts = 0.0
-            self.state = self.STATE_IDLE if self.state != self.STATE_COOLDOWN else self.STATE_COOLDOWN
-            self.prev_mod_pressed = False
+            if self.state != self.STATE_COOLDOWN:
+                self.state = self.STATE_IDLE
 
         # Standard axis processing
         if self.pointer_lock:
@@ -293,4 +294,6 @@ class MouseAxes:
             dy = -dy
         x = max(-1.0, min(1.0, dx / self.scale))
         y = max(-1.0, min(1.0, dy / self.scale))
+
+        self.prev_mod_pressed = mod_pressed
         return x, y
