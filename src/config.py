@@ -60,10 +60,11 @@ DEFAULT_ATTACK_ON_MODIFIER_RELEASE = True
 DEFAULT_AIM_MODIFIER = "alt"
 DEFAULT_AIM_REQUIRES_MOVEMENT = True
 DEFAULT_AIM_DIRECTION_MEMORY_MS = 250
-DEFAULT_ATTACK_PRESS_DURATION_MS = 50
 DEFAULT_POST_ATTACK_COOLDOWN_MS = 200
 DEFAULT_BLOCK_WHILE_HELD = True
 DEFAULT_BLOCK_KEY = "right_mouse"
+DEFAULT_ALLOW_SECTOR_SWITCH_DURING_AIM = True
+DEFAULT_MIN_WINDUP_MS = 100
 
 # Game state detection settings
 DEFAULT_GAME_STATE_DETECTION_ENABLED = True
@@ -143,7 +144,10 @@ def load_user_config():
                 "aim_modifier": user_config.get("aim_modifier", DEFAULT_AIM_MODIFIER),
                 "aim_requires_movement": user_config.get("aim_requires_movement", DEFAULT_AIM_REQUIRES_MOVEMENT),
                 "aim_direction_memory_ms": user_config.get("aim_direction_memory_ms", DEFAULT_AIM_DIRECTION_MEMORY_MS),
-                "attack_press_duration_ms": user_config.get("attack_press_duration_ms", DEFAULT_ATTACK_PRESS_DURATION_MS),
+                "allow_sector_switch_during_aim": user_config.get(
+                    "allow_sector_switch_during_aim", DEFAULT_ALLOW_SECTOR_SWITCH_DURING_AIM
+                ),
+                "min_windup_ms": user_config.get("min_windup_ms", DEFAULT_MIN_WINDUP_MS),
                 "post_attack_cooldown_ms": user_config.get("post_attack_cooldown_ms", DEFAULT_POST_ATTACK_COOLDOWN_MS),
                 "block_while_held": user_config.get("block_while_held", DEFAULT_BLOCK_WHILE_HELD),
                 "block_key": user_config.get("block_key", DEFAULT_BLOCK_KEY),
@@ -198,7 +202,8 @@ def load_user_config():
         "aim_modifier": DEFAULT_AIM_MODIFIER,
         "aim_requires_movement": DEFAULT_AIM_REQUIRES_MOVEMENT,
         "aim_direction_memory_ms": DEFAULT_AIM_DIRECTION_MEMORY_MS,
-        "attack_press_duration_ms": DEFAULT_ATTACK_PRESS_DURATION_MS,
+        "allow_sector_switch_during_aim": DEFAULT_ALLOW_SECTOR_SWITCH_DURING_AIM,
+        "min_windup_ms": DEFAULT_MIN_WINDUP_MS,
         "post_attack_cooldown_ms": DEFAULT_POST_ATTACK_COOLDOWN_MS,
         "block_while_held": DEFAULT_BLOCK_WHILE_HELD,
         "block_key": DEFAULT_BLOCK_KEY,
@@ -255,7 +260,10 @@ ATTACK_ON_MODIFIER_RELEASE = user_config.get("attack_on_modifier_release", DEFAU
 AIM_MODIFIER = user_config.get("aim_modifier", DEFAULT_AIM_MODIFIER)
 AIM_REQUIRES_MOVEMENT = user_config.get("aim_requires_movement", DEFAULT_AIM_REQUIRES_MOVEMENT)
 AIM_DIRECTION_MEMORY_MS = user_config.get("aim_direction_memory_ms", DEFAULT_AIM_DIRECTION_MEMORY_MS)
-ATTACK_PRESS_DURATION_MS = user_config.get("attack_press_duration_ms", DEFAULT_ATTACK_PRESS_DURATION_MS)
+ALLOW_SECTOR_SWITCH_DURING_AIM = user_config.get(
+    "allow_sector_switch_during_aim", DEFAULT_ALLOW_SECTOR_SWITCH_DURING_AIM
+)
+MIN_WINDUP_MS = user_config.get("min_windup_ms", DEFAULT_MIN_WINDUP_MS)
 POST_ATTACK_COOLDOWN_MS = user_config.get("post_attack_cooldown_ms", DEFAULT_POST_ATTACK_COOLDOWN_MS)
 BLOCK_WHILE_HELD = user_config.get("block_while_held", DEFAULT_BLOCK_WHILE_HELD)
 BLOCK_KEY = user_config.get("block_key", DEFAULT_BLOCK_KEY)

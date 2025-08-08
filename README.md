@@ -282,6 +282,8 @@ This provides a user-friendly interface to adjust:
   - **mouse_axes_pointer_lock**: Return the cursor to an anchor position each frame to hide movement (default: `true`)
   - **mouse_axes_lock_center**: Keep the anchor fixed at its first position or let it drift with movement
   - **mouse_axes_invert_y**: Invert the Y axis for mouse-derived joystick movement
+  - **allow_sector_switch_during_aim**: Switch attack direction while holding the modifier (default: `true`)
+  - **min_windup_ms**: Minimum time to hold the attack key before release (default: `100`)
 - **Sector Boundaries**: Angle ranges for each attack direction
 - **Key Mappings**: Keyboard keys for each action
 - **Visualization Settings**: Window size and appearance
@@ -304,12 +306,13 @@ Perform an attack when you let go of a modifier key.
 1. Enable mouse axes mode: `use_mouse_axes = true`
 2. Turn on release attacks: `attack_on_modifier_release = true`
 3. Set the aiming modifier (must be included in `mouse_axes_modifiers`): `aim_modifier = "h"`
-4. Require recent movement with `aim_requires_movement` (default `true`) and specify how long to remember the direction with `aim_direction_memory_ms`
-5. Control how long the attack key is held with `attack_press_duration_ms`
-6. Prevent rapid repeats by setting `post_attack_cooldown_ms`
-7. Optionally hold a block key while aiming: `block_while_held = true` and `block_key = "alt"`
+4. Allow changing direction while holding with `allow_sector_switch_during_aim` (default `true`)
+5. Require recent movement with `aim_requires_movement` and control memory with `aim_direction_memory_ms`
+6. Enforce a minimum windup before striking with `min_windup_ms`
+7. Prevent rapid repeats by setting `post_attack_cooldown_ms`
+8. Optionally hold a block key while aiming: `block_while_held = true` and `block_key = "alt"`
 
-While the modifier is held, moving the mouse selects an attack direction; releasing it presses and releases the mapped attack key. Set `mouse_axes_invert_y = true` if the vertical axis feels reversed.
+While the modifier is held, moving the mouse presses and holds the mapped attack key; releasing the modifier releases it to strike. If aiming feels too sticky, disable sector switching or increase `min_windup_ms`. Set `mouse_axes_invert_y = true` if the vertical axis feels reversed.
 
 ## Input System
 
