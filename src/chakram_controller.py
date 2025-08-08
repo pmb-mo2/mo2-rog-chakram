@@ -20,8 +20,8 @@ from src.config import (
     USE_MOUSE_AXES, MOUSE_AXES_MODIFIERS, MOUSE_AXES_POINTER_LOCK,
     MOUSE_AXES_LOCK_CENTER, MOUSE_AXES_INVERT_Y,
     ATTACK_ON_MODIFIER_RELEASE, AIM_MODIFIER, AIM_REQUIRES_MOVEMENT,
-    AIM_DIRECTION_MEMORY_MS, ATTACK_PRESS_DURATION_MS, POST_ATTACK_COOLDOWN_MS,
-    BLOCK_WHILE_HELD, BLOCK_KEY
+    AIM_DIRECTION_MEMORY_MS, ALLOW_SECTOR_SWITCH_DURING_AIM, MIN_WINDUP_MS,
+    POST_ATTACK_COOLDOWN_MS, BLOCK_WHILE_HELD, BLOCK_KEY
 )
 from src.movement_analyzer import MovementAnalyzer
 from src.game_state_detector import GameStateDetector
@@ -44,10 +44,11 @@ class ChakramController:
                 aim_modifier=AIM_MODIFIER,
                 aim_requires_movement=AIM_REQUIRES_MOVEMENT,
                 aim_direction_memory_ms=AIM_DIRECTION_MEMORY_MS,
-                attack_press_duration_ms=ATTACK_PRESS_DURATION_MS,
                 post_attack_cooldown_ms=POST_ATTACK_COOLDOWN_MS,
                 block_while_held=BLOCK_WHILE_HELD,
                 block_key=BLOCK_KEY,
+                allow_sector_switch_during_aim=ALLOW_SECTOR_SWITCH_DURING_AIM,
+                min_windup_ms=MIN_WINDUP_MS,
             )
             if self.use_mouse_axes
             else None

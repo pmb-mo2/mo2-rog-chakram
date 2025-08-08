@@ -1,15 +1,16 @@
 {
   "use_mouse_axes": true,
-  "mouse_axes_modifiers": ["alt", "mouse4"],
+  "mouse_axes_modifiers": ["h", "alt"],
   "mouse_axes_pointer_lock": true,
   "mouse_axes_lock_center": true,
   "mouse_axes_invert_y": false,
   "attack_on_modifier_release": true,
-  "aim_modifier": "alt",
+  "aim_modifier": "h",
   "aim_requires_movement": true,
   "aim_direction_memory_ms": 250,
-  "attack_press_duration_ms": 50,
+  "allow_sector_switch_during_aim": true,
+  "min_windup_ms": 100,
   "post_attack_cooldown_ms": 200,
   "block_while_held": true,
-  "block_key": "right_mouse"
+  "block_key": "alt"
 }

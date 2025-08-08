@@ -104,10 +104,11 @@ class MouseAxes:
         aim_modifier=None,
         aim_requires_movement=True,
         aim_direction_memory_ms=250,
-        attack_press_duration_ms=50,
         post_attack_cooldown_ms=200,
         block_while_held=False,
         block_key=None,
+        allow_sector_switch_during_aim=True,
+        min_windup_ms=100,
     ):
         self.modifiers = modifiers
         self.scale = scale if scale else 1
@@ -120,10 +121,11 @@ class MouseAxes:
         self.aim_modifier = aim_modifier
         self.aim_requires_movement = aim_requires_movement
         self.aim_direction_memory_ms = aim_direction_memory_ms
-        self.attack_press_duration_ms = attack_press_duration_ms
         self.post_attack_cooldown_ms = post_attack_cooldown_ms
         self.block_while_held = block_while_held
         self.block_key = block_key
+        self.allow_sector_switch_during_aim = allow_sector_switch_during_aim
+        self.min_windup_ms = min_windup_ms
 
         # Runtime state
         self.anchor = None
@@ -133,6 +135,8 @@ class MouseAxes:
         self.cooldown_until_ts = 0.0
         self.prev_mod_pressed = False
         self.block_pressed = False
+        self.held_key = None
+        self.held_since_ms = 0.0
 
     def initialize(self):
         pygame.event.pump()
@@ -225,17 +229,28 @@ class MouseAxes:
             self.state = self.STATE_IDLE
             return 0.0, 0.0
 
-        # Handle modifier held
-        if mod_pressed and self.state != self.STATE_COOLDOWN:
-            if self.state == self.STATE_IDLE:
-                self.state = self.STATE_AIMING
-
+        if mod_pressed and self.state in (self.STATE_IDLE, self.STATE_AIMING):
+            self.state = self.STATE_AIMING
             if self.invert_y:
                 dy = -dy
             x = max(-1.0, min(1.0, dx / self.scale))
             y = max(-1.0, min(1.0, dy / self.scale))
             sector = self._determine_sector(x, y)
             if sector:
+                if self.held_key is None:
+                    key = KEY_MAPPINGS.get(sector)
+                    if key:
+                        key_down(key)
+                        self.held_key = key
+                        self.held_since_ms = now_ms
+                else:
+                    if sector != self.last_sector and self.allow_sector_switch_during_aim:
+                        key_up(self.held_key)
+                        new_key = KEY_MAPPINGS.get(sector)
+                        if new_key:
+                            key_down(new_key)
+                            self.held_key = new_key
+                            self.held_since_ms = now_ms
                 self.last_sector = sector
                 self.last_sector_ts = now_ms
 
@@ -252,37 +267,38 @@ class MouseAxes:
             self.prev_mod_pressed = mod_pressed
             return 0.0, 0.0
 
-        # Modifier just released
+        if mod_pressed and self.state == self.STATE_COOLDOWN:
+            if self.pointer_lock:
+                if not self.lock_center:
+                    self.anchor = (self.anchor[0] + dx, self.anchor[1] + dy)
+                _set_cursor_pos(*self.anchor)
+            else:
+                self.anchor = cur
+            self.prev_mod_pressed = mod_pressed
+            return 0.0, 0.0
+
+        if just_released and self.state == self.STATE_AIMING:
+            hold_left = self.min_windup_ms - (now_ms - self.held_since_ms)
+            if hold_left > 0:
+                time.sleep(hold_left / 1000.0)
+                now_ms = time.perf_counter() * 1000
+            if self.held_key:
+                key_up(self.held_key)
+                self.held_key = None
+            if self.block_while_held:
+                self._release_block()
+            self.cooldown_until_ts = now_ms + self.post_attack_cooldown_ms
+            self.state = self.STATE_COOLDOWN
+            self.last_sector = None
+            self.prev_mod_pressed = mod_pressed
+            return 0.0, 0.0
+
         if just_released:
             if self.block_while_held:
                 self._release_block()
-
-            if (
-                self.attack_on_modifier_release
-                and self.state == self.STATE_AIMING
-            ):
-                valid = True
-                if self.aim_requires_movement:
-                    if (
-                        not self.last_sector
-                        or now_ms - self.last_sector_ts > self.aim_direction_memory_ms
-                    ):
-                        valid = False
-                if valid and self.last_sector:
-                    attack_key = KEY_MAPPINGS.get(self.last_sector)
-                    if attack_key:
-                        key_down(attack_key)
-                        time.sleep(self.attack_press_duration_ms / 1000.0)
-                        key_up(attack_key)
-                        self.cooldown_until_ts = now_ms + self.post_attack_cooldown_ms
-                        self.state = self.STATE_COOLDOWN
-
+            self.state = self.STATE_IDLE
             self.last_sector = None
-            self.last_sector_ts = 0.0
-            if self.state != self.STATE_COOLDOWN:
-                self.state = self.STATE_IDLE
 
-        # Standard axis processing
         if self.pointer_lock:
             if not self.lock_center:
                 self.anchor = (self.anchor[0] + dx, self.anchor[1] + dy)
@@ -297,3 +313,10 @@ class MouseAxes:
 
         self.prev_mod_pressed = mod_pressed
         return x, y
+
+    def __del__(self):
+        if self.held_key:
+            key_up(self.held_key)
+            self.held_key = None
+        if self.block_pressed:
+            self._release_block()
