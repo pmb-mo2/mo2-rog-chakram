@@ -31,7 +31,7 @@ class AimConfig:
     mode: str = "hold"  # hold | toggle
     button: str = "mouse4"
     auto_lmb: bool = True
-    scale: float = 0.2
+    scale: float = 0.1
     scale_x: Optional[float] = None
     scale_y: Optional[float] = None
     min_step: int = 1
@@ -51,7 +51,7 @@ class AimConfig:
             mode=data.get("mode", "hold"),
             button=data.get("button", "mouse4"),
             auto_lmb=data.get("auto_lmb", True),
-            scale=data.get("scale", 0.2),
+            scale=data.get("scale", 0.1),
             scale_x=data.get("scale_x"),
             scale_y=data.get("scale_y"),
             min_step=data.get("min_step", 1),
