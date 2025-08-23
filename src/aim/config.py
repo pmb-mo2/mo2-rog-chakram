@@ -29,7 +29,7 @@ class AimConfig:
 
     enabled: bool = True
     mode: str = "hold"  # hold | toggle
-    button: str = "XButton1"
+    button: str = "mouse4"
     auto_lmb: bool = True
     scale: float = 0.2
     scale_x: Optional[float] = None
@@ -49,7 +49,7 @@ class AimConfig:
         return AimConfig(
             enabled=data.get("enabled", True),
             mode=data.get("mode", "hold"),
-            button=data.get("button", "XButton1"),
+            button=data.get("button", "mouse4"),
             auto_lmb=data.get("auto_lmb", True),
             scale=data.get("scale", 0.2),
             scale_x=data.get("scale_x"),

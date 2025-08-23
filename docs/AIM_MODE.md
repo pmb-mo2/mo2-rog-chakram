@@ -13,7 +13,7 @@ contains an `aim` section:
   "aim": {
     "enabled": true,
     "mode": "hold",
-    "button": "XButton1",
+    "button": "mouse4",
     "auto_lmb": true,
     "scale": 0.2
   }
@@ -21,6 +21,9 @@ contains an `aim` section:
 ```
 
 Only a subset of options is shown above. Missing keys are filled with defaults.
+
+By default, Aim Mode listens to the `mouse4` button (commonly the back side
+button on modern mice).
 
 ## CLI
 

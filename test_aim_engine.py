@@ -40,3 +40,5 @@ def test_config_defaults():
     cfg = AimConfig.from_dict({})
     assert cfg.scale == 0.2
     assert cfg.mode == "hold"
+    assert cfg.enabled is True
+    assert cfg.button == "mouse4"

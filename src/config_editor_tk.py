@@ -9,7 +9,19 @@ import json
 import math
 import tkinter as tk
 from tkinter import ttk, messagebox
-from src.config import SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_SPEED_THRESHOLD, RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, ALT_MODE_KEY, ALT_MODE_CURSOR_OFFSET, VISUALIZATION
+from src.config import (
+    SECTORS,
+    KEY_MAPPINGS,
+    DEADZONE,
+    DEADZONE_SPEED_THRESHOLD,
+    RELEASE_DELAY,
+    SECTOR_CHANGE_COOLDOWN,
+    ALT_MODE_KEY,
+    ALT_MODE_CURSOR_OFFSET,
+    VISUALIZATION,
+)
+from src.aim.config import AimConfig
+from src.io import config_store
 
 class ConfigEditor:
     def __init__(self, root):
@@ -29,8 +41,13 @@ class ConfigEditor:
             "alt_mode_cursor_offset": ALT_MODE_CURSOR_OFFSET,
             "sectors": SECTORS,
             "key_mappings": KEY_MAPPINGS,
-            "visualization": VISUALIZATION
+            "visualization": VISUALIZATION,
         }
+
+        # Load Aim Mode configuration
+        full_cfg = config_store.load_config()
+        aim_cfg = AimConfig.from_dict(full_cfg.get("aim", {}))
+        self.config["aim"] = aim_cfg.to_dict()
         
         # Create a frame for the preview and settings
         self.split_frame = ttk.Frame(self.root)
@@ -166,10 +183,19 @@ class ConfigEditor:
         self.alt_mode_cursor_offset_label = ttk.Label(basic_frame, text=f"{self.config['alt_mode_cursor_offset']}")
         self.alt_mode_cursor_offset_label.grid(row=6, column=2, padx=5, pady=5)
         self.alt_mode_cursor_offset_var.trace_add("write", lambda *args: self.alt_mode_cursor_offset_label.config(text=f"{self.alt_mode_cursor_offset_var.get()}"))
-        
+
+        # Aim Mode settings
+        aim_frame = ttk.LabelFrame(self.content_frame, text="Aim Mode")
+        aim_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky=tk.W+tk.E)
+        self.aim_enabled_var = tk.BooleanVar(value=self.config["aim"]["enabled"])
+        ttk.Checkbutton(aim_frame, text="Enable Aim Mode", variable=self.aim_enabled_var).grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+        ttk.Label(aim_frame, text="Activation Button:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        self.aim_button_var = tk.StringVar(value=self.config["aim"]["button"])
+        ttk.Entry(aim_frame, textvariable=self.aim_button_var, width=10).grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
+
         # Create the sector boundaries section
         sectors_frame = ttk.LabelFrame(self.content_frame, text="Sector Boundaries")
-        sectors_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky=tk.W+tk.E)
+        sectors_frame.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky=tk.W+tk.E)
         
         # Create a frame for each sector
         self.sector_frames = {}
@@ -210,7 +236,7 @@ class ConfigEditor:
         
         # Create the key mappings section
         keys_frame = ttk.LabelFrame(self.content_frame, text="Key Mappings")
-        keys_frame.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky=tk.W+tk.E)
+        keys_frame.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky=tk.W+tk.E)
         
         # Create variables for key mappings
         self.key_vars = {}
@@ -230,7 +256,7 @@ class ConfigEditor:
         
         # Create the visualization settings section
         vis_frame = ttk.LabelFrame(self.content_frame, text="Visualization Settings")
-        vis_frame.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky=tk.W+tk.E)
+        vis_frame.grid(row=5, column=0, columnspan=2, padx=10, pady=10, sticky=tk.W+tk.E)
         
         # Create variables for visualization settings
         self.vis_vars = {
@@ -325,7 +351,7 @@ class ConfigEditor:
         self.config["sector_change_cooldown"] = self.sector_change_cooldown_var.get()
         self.config["alt_mode_key"] = self.alt_mode_key_var.get()
         self.config["alt_mode_cursor_offset"] = self.alt_mode_cursor_offset_var.get()
-        
+
         # Update sectors
         for sector_name in SECTORS:
             self.config["sectors"][sector_name]["start"] = self.sector_vars[sector_name]["start"].get()
@@ -340,6 +366,10 @@ class ConfigEditor:
             self.vis_vars["window_size"]["width"].get(),
             self.vis_vars["window_size"]["height"].get()
         )
+
+        # Update Aim Mode settings
+        self.config["aim"]["enabled"] = self.aim_enabled_var.get()
+        self.config["aim"]["button"] = self.aim_button_var.get()
         
         # Create the config directory if it doesn't exist
         config_dir = os.path.join(os.path.expanduser("~"), ".chakram_controller")
@@ -373,6 +403,11 @@ class ConfigEditor:
         # Reset alternative mode settings
         self.alt_mode_key_var.set(ALT_MODE_KEY)
         self.alt_mode_cursor_offset_var.set(ALT_MODE_CURSOR_OFFSET)
+
+        # Reset Aim Mode settings
+        default_aim = AimConfig()
+        self.aim_enabled_var.set(default_aim.enabled)
+        self.aim_button_var.set(default_aim.button)
         
         # Reset sectors
         for sector_name in SECTORS:

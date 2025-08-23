@@ -308,10 +308,11 @@ This will launch an interactive test menu that allows you to test all aspects of
 
 ## Aim Mode
 
-Aim Mode provides a temporary precision mode by slowing mouse movement and optionally
-auto-holding the left mouse button. Configuration lives in
-`~/.chakram_controller/config.json` under the `aim` section and can be adjusted via
-command line:
+Aim Mode provides a temporary precision mode by slowing mouse movement and
+optionally auto-holding the left mouse button. It is enabled by default and
+listens to the mouse back button (`mouse4`). Configuration lives in
+`~/.chakram_controller/config.json` under the `aim` section and can be
+adjusted via command line:
 
 ```bash
 python run.py --aim-status        # show current settings
