@@ -8,6 +8,7 @@ from src.chakram_controller import ChakramController
 from src.visualizer import Visualizer
 from src.trainer import ChakramTrainer
 from src.config import VISUALIZATION, DEADZONE_SPEED_THRESHOLD, SECTOR_CHANGE_COOLDOWN
+from src.mouse_interceptor import start_mouse_interceptor, stop_mouse_interceptor
 
 def initialize_pygame():
     """Initialize pygame with error handling."""
@@ -82,6 +83,13 @@ def main():
     
     # Start the controller background thread
     controller.start_background_thread()
+    
+    # Start the mouse interceptor for aim mode
+    mouse_interceptor_started = start_mouse_interceptor()
+    if mouse_interceptor_started:
+        print("Mouse interceptor started for aim mode")
+    else:
+        print("Warning: Mouse interceptor failed to start")
     
     # Main loop
     clock = pygame.time.Clock()
@@ -227,6 +235,7 @@ def main():
     finally:
         # Clean up
         controller.stop_background_thread()
+        stop_mouse_interceptor()
         pygame.quit()
         return 0
 

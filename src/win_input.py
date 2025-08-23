@@ -30,8 +30,14 @@ MOUSEEVENTF_RIGHTDOWN = 0x0008
 MOUSEEVENTF_RIGHTUP = 0x0010
 MOUSEEVENTF_MIDDLEDOWN = 0x0020
 MOUSEEVENTF_MIDDLEUP = 0x0040
+MOUSEEVENTF_XDOWN = 0x0080
+MOUSEEVENTF_XUP = 0x0100
 MOUSEEVENTF_MOVE = 0x0001
 MOUSEEVENTF_ABSOLUTE = 0x8000
+
+# X button constants
+XBUTTON1 = 0x0001  # Back button
+XBUTTON2 = 0x0002  # Forward button
 
 # Virtual key codes (for Windows API fallback)
 VK_CODES = {
@@ -172,10 +178,19 @@ def create_mouse_input(button, is_down):
     """Create an INPUT structure for a mouse button event (Windows API)."""
     if button == 'left':
         flag = MOUSEEVENTF_LEFTDOWN if is_down else MOUSEEVENTF_LEFTUP
+        mouse_data = 0
     elif button == 'right':
         flag = MOUSEEVENTF_RIGHTDOWN if is_down else MOUSEEVENTF_RIGHTUP
+        mouse_data = 0
     elif button == 'middle':
         flag = MOUSEEVENTF_MIDDLEDOWN if is_down else MOUSEEVENTF_MIDDLEUP
+        mouse_data = 0
+    elif button == 'mouse4' or button == 'x1':
+        flag = MOUSEEVENTF_XDOWN if is_down else MOUSEEVENTF_XUP
+        mouse_data = XBUTTON1
+    elif button == 'mouse5' or button == 'x2':
+        flag = MOUSEEVENTF_XDOWN if is_down else MOUSEEVENTF_XUP
+        mouse_data = XBUTTON2
     else:
         print(f"Error: Unknown mouse button '{button}'")
         return None
@@ -186,7 +201,7 @@ def create_mouse_input(button, is_down):
             mi=MOUSEINPUT(
                 dx=0,
                 dy=0,
-                mouseData=0,
+                mouseData=mouse_data,
                 dwFlags=flag,
                 time=0,
                 dwExtraInfo=ctypes.pointer(wintypes.ULONG(0))
@@ -559,6 +574,155 @@ def click_middle_mouse():
         return False
     
     return True
+
+def mouse4_down():
+    """Send a mouse4 (back) button down event."""
+    if not INTERCEPTION_AVAILABLE:
+        return mouse_button_down_windows_api('mouse4')
+    
+    global mouse
+    
+    if not mouse:
+        if not initialize():
+            return mouse_button_down_windows_api('mouse4')
+    
+    try:
+        # Use the interception mouse_down function with mouse4 button
+        interception.mouse_down('mouse4')
+        return True
+    except Exception as e:
+        print(f"Error sending mouse4 down event with Interception: {e}")
+        print("Falling back to Windows API...")
+        return mouse_button_down_windows_api('mouse4')
+
+def mouse4_up():
+    """Send a mouse4 (back) button up event."""
+    if not INTERCEPTION_AVAILABLE:
+        return mouse_button_up_windows_api('mouse4')
+    
+    global mouse
+    
+    if not mouse:
+        if not initialize():
+            return mouse_button_up_windows_api('mouse4')
+    
+    try:
+        # Use the interception mouse_up function with mouse4 button
+        interception.mouse_up('mouse4')
+        return True
+    except Exception as e:
+        print(f"Error sending mouse4 up event with Interception: {e}")
+        print("Falling back to Windows API...")
+        return mouse_button_up_windows_api('mouse4')
+
+def click_mouse4():
+    """Click the mouse4 (back) button (press and release)."""
+    if not mouse4_down():
+        return False
+    
+    # No delay for maximum responsiveness
+    
+    if not mouse4_up():
+        return False
+    
+    return True
+
+def mouse5_down():
+    """Send a mouse5 (forward) button down event."""
+    if not INTERCEPTION_AVAILABLE:
+        return mouse_button_down_windows_api('mouse5')
+    
+    global mouse
+    
+    if not mouse:
+        if not initialize():
+            return mouse_button_down_windows_api('mouse5')
+    
+    try:
+        # Use the interception mouse_down function with mouse5 button
+        interception.mouse_down('mouse5')
+        return True
+    except Exception as e:
+        print(f"Error sending mouse5 down event with Interception: {e}")
+        print("Falling back to Windows API...")
+        return mouse_button_down_windows_api('mouse5')
+
+def mouse5_up():
+    """Send a mouse5 (forward) button up event."""
+    if not INTERCEPTION_AVAILABLE:
+        return mouse_button_up_windows_api('mouse5')
+    
+    global mouse
+    
+    if not mouse:
+        if not initialize():
+            return mouse_button_up_windows_api('mouse5')
+    
+    try:
+        # Use the interception mouse_up function with mouse5 button
+        interception.mouse_up('mouse5')
+        return True
+    except Exception as e:
+        print(f"Error sending mouse5 up event with Interception: {e}")
+        print("Falling back to Windows API...")
+        return mouse_button_up_windows_api('mouse5')
+
+def click_mouse5():
+    """Click the mouse5 (forward) button (press and release)."""
+    if not mouse5_down():
+        return False
+    
+    # No delay for maximum responsiveness
+    
+    if not mouse5_up():
+        return False
+    
+    return True
+
+def is_right_mouse_pressed():
+    """Check if the right mouse button is currently pressed."""
+    try:
+        # Import GetAsyncKeyState function
+        GetAsyncKeyState = user32.GetAsyncKeyState
+        GetAsyncKeyState.argtypes = [wintypes.INT]
+        GetAsyncKeyState.restype = wintypes.SHORT
+        
+        # VK_RBUTTON = 0x02 (right mouse button)
+        key_state = GetAsyncKeyState(0x02)
+        return (key_state & 0x8000) != 0
+    except Exception as e:
+        print(f"Error checking right mouse button state: {e}")
+        return False
+
+def is_mouse4_pressed():
+    """Check if the mouse4 (back) button is currently pressed."""
+    try:
+        # Import GetAsyncKeyState function
+        GetAsyncKeyState = user32.GetAsyncKeyState
+        GetAsyncKeyState.argtypes = [wintypes.INT]
+        GetAsyncKeyState.restype = wintypes.SHORT
+        
+        # VK_XBUTTON1 = 0x05 (mouse4/back button)
+        key_state = GetAsyncKeyState(0x05)
+        return (key_state & 0x8000) != 0
+    except Exception as e:
+        print(f"Error checking mouse4 button state: {e}")
+        return False
+
+def is_mouse5_pressed():
+    """Check if the mouse5 (forward) button is currently pressed."""
+    try:
+        # Import GetAsyncKeyState function
+        GetAsyncKeyState = user32.GetAsyncKeyState
+        GetAsyncKeyState.argtypes = [wintypes.INT]
+        GetAsyncKeyState.restype = wintypes.SHORT
+        
+        # VK_XBUTTON2 = 0x06 (mouse5/forward button)
+        key_state = GetAsyncKeyState(0x06)
+        return (key_state & 0x8000) != 0
+    except Exception as e:
+        print(f"Error checking mouse5 button state: {e}")
+        return False
 
 def send_key_sequence(keys, delay=0.01):
     """

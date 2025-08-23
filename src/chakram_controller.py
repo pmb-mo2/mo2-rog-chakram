@@ -8,7 +8,7 @@ import threading
 import time
 import queue
 import pygame
-from src.win_input import key_down, key_up, send_sector_change, right_mouse_down, right_mouse_up, move_mouse, get_cursor_position
+from src.win_input import key_down, key_up, send_sector_change, right_mouse_down, right_mouse_up, move_mouse, get_cursor_position, is_mouse4_pressed, left_mouse_down, left_mouse_up
 from src.config import (
     SECTORS, KEY_MAPPINGS, DEADZONE, DEADZONE_TIME_THRESHOLD, DEADZONE_SPEED_THRESHOLD, 
     RELEASE_DELAY, SECTOR_CHANGE_COOLDOWN, ALT_MODE_KEY, ALT_MODE_CURSOR_OFFSET,
@@ -20,6 +20,9 @@ from src.config import (
 )
 from src.movement_analyzer import MovementAnalyzer
 from src.game_state_detector import GameStateDetector
+from src.aim.config import AimConfig
+from src.aim.engine import AimEngine
+from src.io import config_store
 
 class ChakramController:
     def __init__(self):
@@ -108,6 +111,11 @@ class ChakramController:
         self.last_update_time = time.time()
         self.deadzone_timeout = 0.5  # Timeout in seconds to force exit from deadzone
         self.sector_change_timeout = 0.2  # Timeout for sector change operations
+        
+        # Aim Mode integration
+        self.aim_engine = None
+        self.aim_mouse4_pressed = False
+        self._initialize_aim_mode()
     
     def initialize(self, joystick_id=None):
         """
@@ -578,327 +586,6 @@ class ChakramController:
         # Reset alt mode state
         self.alt_mode_current_sector = None
     
-    def update(self):
-        """Update the controller state and simulate key presses."""
-        # Get current time
-        current_time = time.time()
-        
-        # Safety mechanism to prevent infinite loops or getting stuck
-        time_since_last_update = current_time - self.last_update_time
-        self.last_update_time = current_time
-        
-        # Get joystick position, angle, and distance
-        current_position = self.get_joystick_position()
-        angle, distance = self.get_joystick_angle_and_distance()
-        
-        # Update movement analyzer with current position and time
-        if self.adaptive_enabled:
-            movement_metrics = self.movement_analyzer.update(current_position, current_time)
-            
-            # Update prediction if enabled
-            if self.prediction_enabled:
-                self.predicted_sector = self.movement_analyzer.predict_next_sector(
-                    SECTORS, self.current_sector, self.get_effective_deadzone())
-                self.prediction_confidence = movement_metrics["prediction_confidence"]
-            
-            # Update movement trail for visualization
-            # Get the last 10 positions from the movement analyzer
-            if hasattr(self.movement_analyzer, 'position_history') and len(self.movement_analyzer.position_history) > 0:
-                self.debug_info["movement_trail"] = list(self.movement_analyzer.position_history)
-        
-        # Check for combat mode toggle with keyboard key
-        if self.combat_mode_enabled:
-            self.check_combat_mode_toggle()
-            
-        # Also allow combat mode toggle with joystick button
-        try:
-            if self.joystick and self.joystick.get_numbuttons() > 1:
-                combat_button_pressed = self.joystick.get_button(1)  # Second button
-                
-                # Toggle combat mode on button press
-                if combat_button_pressed and not self.combat_mode_key_pressed:
-                    # Button just pressed - toggle combat mode
-                    self.combat_mode_active = not self.combat_mode_active
-                    self.combat_mode_key_pressed = True
-                    print(f"Combat mode {'activated' if self.combat_mode_active else 'deactivated'} (joystick button)")
-                elif not combat_button_pressed and self.combat_mode_key_pressed:
-                    # Button just released
-                    self.combat_mode_key_pressed = False
-        except Exception as e:
-            print(f"Error checking combat mode button: {e}")
-        
-        # Check if alt mode key is pressed
-        alt_key_pressed = self.check_alt_mode_key()
-        
-        # Handle alt mode activation/deactivation
-        if alt_key_pressed and not self.alt_mode_key_pressed:
-            # Alt key just pressed - activate alt mode
-            self.alt_mode_active = True
-            self.alt_mode_key_pressed = True
-            print("Alternative mode activated")
-            
-            # Release all keys from standard mode
-            self.release_all_keys()
-            
-            # Reset sector change flag to prevent getting stuck
-            self.sector_change_in_progress = False
-            
-        elif not alt_key_pressed and self.alt_mode_key_pressed:
-            # Alt key just released - deactivate alt mode
-            self.alt_mode_active = False
-            self.alt_mode_key_pressed = False
-            print("Alternative mode deactivated")
-            
-            # Clean up alt mode
-            self.exit_alt_mode()
-            
-            # Reset sector change flag to prevent getting stuck
-            self.sector_change_in_progress = False
-        
-        # Get effective deadzone based on movement patterns and game state
-        effective_deadzone = self.get_effective_deadzone()
-        self.current_deadzone = effective_deadzone
-        
-        # Simplified deadzone detection - use a direct approach with dynamic deadzone
-        was_in_deadzone = self.in_deadzone
-        
-        # Direct deadzone check with dynamic deadzone
-        self.in_deadzone = distance < effective_deadzone
-        
-        # Calculate movement speed for all frames to get more accurate readings
-        movement_speed = self.calculate_movement_speed(
-            self.last_position, current_position, 
-            self.last_position_time, current_time
-        )
-        
-        # Store the speed for use in deadzone exit logic
-        if self.in_deadzone:
-            # Update the speed while in deadzone to get the most recent value
-            self.deadzone_speed = movement_speed
-        
-        # Update game state detector if enabled
-        if GAME_STATE_DETECTION_ENABLED:
-            game_state = self.game_state_detector.update(self.pressed_keys, current_time)
-        
-        # SIMPLIFIED DEADZONE LOGIC
-        # If we just entered the deadzone
-        if self.in_deadzone and not was_in_deadzone:
-            self.deadzone_entry_time = current_time
-            print(f"Entered deadzone at {current_time:.3f}")
-            
-            # Store the last active sector before entering deadzone
-            if self.current_sector is not None:
-                self.last_active_sector = self.current_sector
-                print(f"Stored last active sector: {self.last_active_sector}")
-            
-            # Reset sector change flag when entering deadzone
-            self.sector_change_in_progress = False
-        
-        # If we're in the deadzone, check how long we've been there
-        if self.in_deadzone:
-            deadzone_time = current_time - self.deadzone_entry_time
-            
-            # If we've been in the deadzone for longer than the threshold, release attack buttons
-            if deadzone_time >= DEADZONE_TIME_THRESHOLD and len(self.pressed_keys) > 0:
-                print(f"In deadzone for {deadzone_time:.3f}s, releasing all attack keys")
-                self.release_all_keys()
-                
-                # Update state
-                self.current_sector = None
-                self.current_state = "neutral"
-        
-        # If we just exited the deadzone
-        if not self.in_deadzone and was_in_deadzone:
-            print(f"Exited deadzone at {current_time:.3f}")
-            
-            # Reset sector change flag when exiting deadzone
-            self.sector_change_in_progress = False
-            
-            # Get the new sector after exiting deadzone
-            new_sector = self.get_current_sector(angle, distance)
-            
-            # If we have a valid new sector and a stored last active sector
-            # and they are different, trigger a sector change
-            if (new_sector is not None and 
-                self.last_active_sector is not None and 
-                new_sector != self.last_active_sector):
-                print(f"Detected sector change through deadzone: {self.last_active_sector} -> {new_sector}")
-                
-                # Set the sector change flag and update the last change time
-                self.sector_change_in_progress = True
-                self.last_sector_change_time = current_time
-                
-                # Handle the sector change directly
-                self._enqueue_sector_change(self.last_active_sector, new_sector)
-                
-                # Update current sector to the new one
-                self.current_sector = new_sector
-        
-        # If alt mode is active, handle it differently
-        if self.alt_mode_active:
-            # Release any attack keys that might still be pressed
-            attack_keys = [KEY_MAPPINGS[sector] for sector in SECTORS.keys()]
-            for key in list(self.pressed_keys):
-                if key in attack_keys:
-                    self.release_key(key)
-                    print(f"Released attack key {key} in alt mode")
-            
-            # Handle alt mode and ensure position is updated in debug info
-            self.handle_alt_mode(angle, distance)
-            
-            # Make sure debug info has the current position
-            self.debug_info["position"] = current_position
-            self.debug_info["angle"] = angle
-            self.debug_info["distance"] = distance
-            
-            # Update tracking variables for next iteration
-            self.last_position = current_position
-            self.last_position_time = current_time
-            return
-        
-        # Standard mode processing
-        # Determine sector and state - only determine sector if outside deadzone
-        new_sector = self.get_current_sector(angle, distance)
-        new_state = self.get_current_state(new_sector, angle, distance)
-        
-        # Determine if this is a quick movement through the deadzone
-        quick_movement = False
-        if self.adaptive_enabled:
-            quick_movement = self.movement_analyzer.is_quick_movement(DEADZONE_SPEED_THRESHOLD)
-        else:
-            quick_movement = self.deadzone_speed > DEADZONE_SPEED_THRESHOLD
-        
-        # Update debug info
-        self.debug_info["position"] = current_position
-        self.debug_info["angle"] = angle
-        self.debug_info["distance"] = distance
-        self.debug_info["sector"] = new_sector
-        self.debug_info["state"] = new_state
-        self.debug_info["pressed_keys"] = list(self.pressed_keys)
-        self.debug_info["deadzone_speed"] = self.deadzone_speed
-        self.debug_info["quick_movement"] = quick_movement
-        self.debug_info["alt_mode_active"] = self.alt_mode_active
-        self.debug_info["alt_mode_sector"] = self.alt_mode_current_sector
-        self.debug_info["adaptive_enabled"] = self.adaptive_enabled
-        self.debug_info["combat_mode_active"] = self.combat_mode_active
-        self.debug_info["current_deadzone"] = self.current_deadzone
-        self.debug_info["predicted_sector"] = self.predicted_sector
-        self.debug_info["prediction_confidence"] = self.prediction_confidence
-        self.debug_info["game_state"] = self.game_state_detector.current_state if GAME_STATE_DETECTION_ENABLED else "unknown"
-        self.debug_info["movement_speed"] = self.movement_analyzer.current_speed if self.adaptive_enabled else movement_speed
-        self.debug_info["transition_smoothness"] = self.get_transition_smoothness()
-        
-        # Skip processing if a sector change is already in progress
-        # But add a timeout to prevent getting stuck
-        if self.sector_change_in_progress:
-            # Check if we've been stuck for too long
-            if time_since_last_update > self.sector_change_timeout:
-                print(f"Sector change taking too long ({time_since_last_update:.3f}s). Forcing reset.")
-                self.sector_change_in_progress = False
-                # Continue processing this frame instead of returning
-            else:
-                # Update tracking variables for next iteration
-                self.last_position = current_position
-                self.last_position_time = current_time
-                return
-        
-        # Process state changes and button presses
-        state_changed = False
-        cancel_pressed = False
-        
-        # Check for cancel button press in any state
-        try:
-            # Check if joystick has buttons
-            if self.joystick and self.joystick.get_numbuttons() > 0:
-                # Check the first button (usually the main/cancel button)
-                if self.joystick.get_button(0):
-                    # Press and release the cancel key
-                    cancel_key = KEY_MAPPINGS["cancel"]
-                    self.press_key(cancel_key)
-                    # Release after a very short delay
-                    time.sleep(0.01)  # Reduced from 0.05 to 0.01 for faster response
-                    self.release_key(cancel_key)
-                    print("Cancel button pressed")
-                    cancel_pressed = True
-                    
-                    # If we're in an attack state, also release the attack key
-                    if self.current_state == "attack" and self.current_sector:
-                        attack_key = KEY_MAPPINGS[self.current_sector]
-                        if attack_key in self.pressed_keys:
-                            self.release_key(attack_key)
-                            print(f"Released attack key {attack_key} due to cancel button press")
-        except Exception as e:
-            print(f"Error checking cancel button: {e}")
-            
-        # Handle sector changes (only if we're not in neutral state and cancel wasn't pressed)
-        if not cancel_pressed and new_sector != self.current_sector:
-            # When crossing sector boundary:
-            if self.current_sector is not None and new_sector is not None:
-                # If we've quickly moved through the deadzone, use atomic operation for maximum speed
-                if quick_movement and was_in_deadzone:
-                    print(f"Quick movement through deadzone detected (speed: {self.deadzone_speed:.2f}). Using atomic operation.")
-                    
-                    try:
-                        # Import the optimized function for sending sector change
-                        from src.win_input import send_sector_change
-                        
-                        cancel_key = KEY_MAPPINGS["cancel"]
-                        old_attack_key = KEY_MAPPINGS[self.current_sector]
-                        new_attack_key = KEY_MAPPINGS[new_sector]
-                        
-                        # Use the optimized sector change function that ensures correct key sequence:
-                        # 1. Press cancel key
-                        # 2. Release old attack key
-                        # 3. Release cancel key
-                        # 4. Press new attack key
-                        send_sector_change(cancel_key, old_attack_key, new_attack_key, 0)
-                        
-                        # Update the pressed keys set
-                        if old_attack_key in self.pressed_keys:
-                            self.pressed_keys.remove(old_attack_key)
-                            self._log_key_action(old_attack_key, True, batch=True)
-                        
-                        self.pressed_keys.add(new_attack_key)
-                        self._log_key_action(cancel_key, False, batch=True)
-                        self._log_key_action(cancel_key, True, batch=True)
-                        self._log_key_action(new_attack_key, False, batch=True)
-                    except Exception as e:
-                        print(f"Error during quick movement handling: {e}")
-                        # Fallback to individual key operations if the atomic operation fails
-                        if self.current_sector and KEY_MAPPINGS[self.current_sector] in self.pressed_keys:
-                            self.release_key(KEY_MAPPINGS[self.current_sector])
-                        
-                        if new_sector:
-                            new_attack_key = KEY_MAPPINGS[new_sector]
-                            self.press_key(new_attack_key)
-                    
-                    # Skip the cooldown period for quick movements
-                    self.last_sector_change_time = 0
-                else:
-                    # Set the sector change flag and update the last change time
-                    self.sector_change_in_progress = True
-                    self.last_sector_change_time = current_time
-                    print(f"Starting sector change: {self.current_sector} -> {new_sector}")
-                    # Handle the sector change directly
-                    self._enqueue_sector_change(self.current_sector, new_sector)
-            elif new_state == "attack" and new_sector:
-                # If we're entering a sector from neutral, just press the attack key
-                new_attack_key = KEY_MAPPINGS[new_sector]
-                self.press_key(new_attack_key)
-        
-        # Handle state changes within the same sector
-        elif new_state != self.current_state:
-            if new_state == "attack" and new_sector:
-                # If we're entering attack state in the same sector, press the attack key
-                new_attack_key = KEY_MAPPINGS[new_sector]
-                self.press_key(new_attack_key)
-        
-        self.current_sector = new_sector
-        self.current_state = new_state
-        
-        # Update tracking variables for next iteration
-        self.last_position = current_position
-        self.last_position_time = current_time
     
     def check_combat_mode_toggle(self):
         """Check if the combat mode key is pressed and toggle combat mode."""
@@ -1460,6 +1147,9 @@ class ChakramController:
         self.current_sector = new_sector
         self.current_state = new_state
         
+        # Check aim button state
+        self._check_aim_button()
+        
         # Update tracking variables for next iteration
         self.last_position = current_position
         self.last_position_time = current_time
@@ -1593,6 +1283,57 @@ class ChakramController:
         """Stop the controller background thread. Alias for stop()."""
         return self.stop()
     
+    def _initialize_aim_mode(self):
+        """Initialize the aim mode engine."""
+        try:
+            # Load aim configuration
+            cfg = config_store.load_config()
+            aim_cfg = AimConfig.from_dict(cfg.get("aim", {}))
+            
+            # Create aim engine
+            self.aim_engine = AimEngine(aim_cfg)
+            print(f"Aim Mode initialized: enabled={aim_cfg.enabled}, button={aim_cfg.button}")
+        except Exception as e:
+            print(f"Error initializing aim mode: {e}")
+            self.aim_engine = None
+    
+    def _check_aim_button(self):
+        """Check if the aim activation button is pressed."""
+        if not self.aim_engine or not self.aim_engine.enabled:
+            return
+        
+        try:
+            # Check mouse4 button state
+            mouse4_pressed = is_mouse4_pressed()
+            
+            # Handle button state change
+            if mouse4_pressed and not self.aim_mouse4_pressed:
+                # Button just pressed
+                self.aim_mouse4_pressed = True
+                lmb_events = self.aim_engine.on_button(True)
+                
+                # Handle auto LMB events
+                for button, action in lmb_events:
+                    if button == "LMB" and action == "down":
+                        left_mouse_down()
+                    elif button == "LMB" and action == "up":
+                        left_mouse_up()
+                        
+            elif not mouse4_pressed and self.aim_mouse4_pressed:
+                # Button just released
+                self.aim_mouse4_pressed = False
+                lmb_events = self.aim_engine.on_button(False)
+                
+                # Handle auto LMB events
+                for button, action in lmb_events:
+                    if button == "LMB" and action == "down":
+                        left_mouse_down()
+                    elif button == "LMB" and action == "up":
+                        left_mouse_up()
+                        
+        except Exception as e:
+            print(f"Error checking aim button: {e}")
+
     def get_debug_info(self):
         """Get the current debug info."""
         return self.debug_info
