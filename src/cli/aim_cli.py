@@ -84,16 +84,27 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def handle_args(args: argparse.Namespace) -> bool:
+    handled = False
+    
+    # Handle aim enable/disable first
     if args.aim:
         cmd_toggle(args.aim == "enable")
-        return True
+        handled = True
+    
+    # Handle other aim commands
     if args.aim_status:
         cmd_status()
-        return True
-    if args.aim_test:
-        cmd_test()
-        return True
+        handled = True
+    
     if args.aim_set:
         cmd_set(args.aim_set)
-        return True
-    return False
+        handled = True
+    
+    # Handle aim test last, and only if no other commands were processed
+    # or if it's the only command
+    if args.aim_test:
+        if not handled or (not args.aim and not args.aim_status and not args.aim_set):
+            cmd_test()
+        handled = True
+    
+    return handled

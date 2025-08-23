@@ -1,0 +1,53 @@
+{
+    "deadzone": 0.2937062937062937,
+    "deadzone_speed_threshold": 0.05,
+    "release_delay": 0.0,
+    "sector_change_cooldown": 0.0,
+    "alt_mode_key": "alt",
+    "alt_mode_cursor_offset": 30,
+    "use_mouse_axes": true,
+    "mouse_axes_modifiers": ["alt", "mouse4"],
+    "sectors": {
+        "overhead": {
+            "start": 225.0,
+            "end": 315.0
+        },
+        "right": {
+            "start": 315.0,
+            "end": 45.0
+        },
+        "thrust": {
+            "start": 45.0,
+            "end": 135.0
+        },
+        "left": {
+            "start": 135.0,
+            "end": 225.0
+        }
+    },
+    "key_mappings": {
+        "overhead": "up",
+        "right": "right",
+        "thrust": "down",
+        "left": "left",
+        "cancel": "middle_mouse",
+        "alt_mode": "alt"
+    },
+    "visualization": {
+        "window_size": [800, 600],
+        "background_color": [30, 30, 30],
+        "text_color": [200, 200, 200],
+        "joystick_color": [0, 255, 0],
+        "sector_colors": {
+            "overhead": [255, 100, 100],
+            "right": [100, 255, 100],
+            "thrust": [100, 100, 255],
+            "left": [255, 255, 100]
+        },
+        "state_colors": {
+            "neutral": [100, 100, 100],
+            "cancel": [255, 165, 0],
+            "attack": [255, 0, 0]
+        }
+    }
+}
