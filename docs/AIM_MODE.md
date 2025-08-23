@@ -15,7 +15,7 @@ contains an `aim` section:
     "mode": "hold",
     "button": "mouse4",
     "auto_lmb": true,
-    "scale": 0.2
+    "scale": 0.1
   }
 }
 ```
@@ -23,7 +23,7 @@ contains an `aim` section:
 Only a subset of options is shown above. Missing keys are filled with defaults.
 
 By default, Aim Mode listens to the `mouse4` button (commonly the back side
-button on modern mice).
+button on modern mice) and applies a slowdown scale of `0.1`.
 
 ## CLI
 

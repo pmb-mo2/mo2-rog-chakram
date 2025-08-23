@@ -38,6 +38,7 @@ class AimEngine:
         Returns a list of synthetic LMB events (button, action).
         """
         if not self.enabled:
+            print("AimEngine: activation button event ignored (disabled)")
             return []
         out: List[Tuple[str, str]] = []
         if self.cfg.mode == "hold":
@@ -45,13 +46,18 @@ class AimEngine:
         else:  # toggle
             if pressed:
                 self.aiming = not self.aiming
+
+        print(f"AimEngine: button {'pressed' if pressed else 'released'}, aiming={self.aiming}")
+
         if self.cfg.auto_lmb:
             if self.aiming and not self._owns_lmb:
                 out.append(("LMB", "down"))
                 self._owns_lmb = True
+                print("AimEngine: auto LMB down")
             elif not self.aiming and self._owns_lmb:
                 out.append(("LMB", "up"))
                 self._owns_lmb = False
+                print("AimEngine: auto LMB up")
         return out
 
     # Movement scaling ------------------------------------------------
