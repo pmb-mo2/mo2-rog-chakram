@@ -5,6 +5,22 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
+# Common aliases for mouse buttons. This allows users to refer to the
+# back button using different names and still have the configuration use
+# the canonical identifier expected by the rest of the code base.
+BUTTON_ALIASES = {
+    "mouse_back": "mouse4",
+    "back": "mouse4",
+    "xbutton1": "mouse4",
+    "mouse_x1": "mouse4",
+}
+
+
+def _normalize_button(name: str) -> str:
+    """Normalize button aliases to canonical names."""
+    key = name.lower()
+    return BUTTON_ALIASES.get(key, key)
+
 
 @dataclass
 class SmoothingConfig:
@@ -49,7 +65,7 @@ class AimConfig:
         return AimConfig(
             enabled=data.get("enabled", True),
             mode=data.get("mode", "hold"),
-            button=data.get("button", "mouse4"),
+            button=_normalize_button(data.get("button", "mouse4")),
             auto_lmb=data.get("auto_lmb", True),
             scale=data.get("scale", 0.1),
             scale_x=data.get("scale_x"),

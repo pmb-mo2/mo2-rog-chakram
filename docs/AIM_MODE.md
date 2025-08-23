@@ -23,7 +23,8 @@ contains an `aim` section:
 Only a subset of options is shown above. Missing keys are filled with defaults.
 
 By default, Aim Mode listens to the `mouse4` button (commonly the back side
-button on modern mice) and applies a slowdown scale of `0.1`.
+button on modern mice) and applies a slowdown scale of `0.1`. Aliases such as
+`mouse_back` or simply `back` are also understood.
 
 ## CLI
 

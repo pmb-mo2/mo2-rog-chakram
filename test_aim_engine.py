@@ -42,3 +42,10 @@ def test_config_defaults():
     assert cfg.mode == "hold"
     assert cfg.enabled is True
     assert cfg.button == "mouse4"
+
+
+def test_button_aliases():
+    cfg = AimConfig.from_dict({"button": "mouse_back"})
+    assert cfg.button == "mouse4"
+    cfg = AimConfig.from_dict({"button": "back"})
+    assert cfg.button == "mouse4"
