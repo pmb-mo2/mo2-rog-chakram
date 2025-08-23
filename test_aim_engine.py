@@ -15,8 +15,9 @@ def test_scale_move_basic():
     engine = make_engine(scale=0.5)
     engine.on_button(True)
     assert engine.scale_move(10, -10) == (5, -5)
-    # min_step ensures small movements survive
-    assert engine.scale_move(1, 0)[0] == 1
+    # small movements should accumulate when scaling is active
+    assert engine.scale_move(1, 0) == (0, 0)
+    assert engine.scale_move(1, 0) == (1, 0)
 
 
 def test_hold_auto_lmb():

@@ -30,6 +30,8 @@ class AimEngine:
         self._owns_lmb = False
         self._ema_x = EMA(cfg.smoothing.alpha)
         self._ema_y = EMA(cfg.smoothing.alpha)
+        self._rem_x = 0.0
+        self._rem_y = 0.0
 
     # Button handling -------------------------------------------------
     def on_button(self, pressed: bool) -> List[Tuple[str, str]]:
@@ -73,12 +75,18 @@ class AimEngine:
 
         sx = self.cfg.scale_x if self.cfg.scale_x is not None else self.cfg.scale
         sy = self.cfg.scale_y if self.cfg.scale_y is not None else self.cfg.scale
-        fx = int(dx * sx)
-        fy = int(dy * sy)
 
-        # Ensure minimal step
-        if dx != 0 and abs(fx) < self.cfg.min_step:
-            fx = self.cfg.min_step if dx > 0 else -self.cfg.min_step
-        if dy != 0 and abs(fy) < self.cfg.min_step:
-            fy = self.cfg.min_step if dy > 0 else -self.cfg.min_step
+        # Accumulate fractional remainders to effectively lower sensitivity
+        self._rem_x += dx * sx
+        self._rem_y += dy * sy
+        fx = int(self._rem_x)
+        fy = int(self._rem_y)
+        self._rem_x -= fx
+        self._rem_y -= fy
+
+        # Ensure minimal step when a scaled movement is emitted
+        if fx != 0 and abs(fx) < self.cfg.min_step:
+            fx = self.cfg.min_step if fx > 0 else -self.cfg.min_step
+        if fy != 0 and abs(fy) < self.cfg.min_step:
+            fy = self.cfg.min_step if fy > 0 else -self.cfg.min_step
         return fx, fy
