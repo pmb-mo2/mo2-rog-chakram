@@ -11,13 +11,27 @@ def make_engine(**kwargs) -> AimEngine:
     return AimEngine(cfg)
 
 
-def test_scale_move_basic():
+def test_scale_move_identity():
     engine = make_engine(scale=0.5)
     engine.on_button(True)
-    assert engine.scale_move(10, -10) == (5, -5)
-    # small movements should accumulate when scaling is active
-    assert engine.scale_move(1, 0) == (0, 0)
-    assert engine.scale_move(1, 0) == (1, 0)
+    assert engine.scale_move(10, -10) == (10, -10)
+
+
+def test_mouse_speed_adjustment(monkeypatch):
+    orig_speed = 10
+    speeds = []
+    monkeypatch.setattr("src.aim.engine.get_mouse_speed", lambda: orig_speed)
+
+    def fake_set(speed):
+        speeds.append(speed)
+
+    monkeypatch.setattr("src.aim.engine.set_mouse_speed", fake_set)
+
+    engine = make_engine(scale=0.5)
+    engine.on_button(True)
+    assert speeds[-1] == 5
+    engine.on_button(False)
+    assert speeds[-1] == orig_speed
 
 
 def test_hold_auto_lmb():

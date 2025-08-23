@@ -3,9 +3,9 @@
 Aim Mode slows down mouse movement and optionally auto-holds the left mouse button.
 It is intended for precise aiming while a chosen activation button is held or toggled.
 
-Internally the engine accumulates scaled mouse deltas to lower the effective
-pointer sensitivity. This avoids jitter from simple integer rounding and makes
-small movements feel smoother when Aim Mode is active.
+When active the engine temporarily reduces the operating system's mouse speed
+instead of scaling individual cursor deltas. This directly lowers pointer
+sensitivity for all movement, providing smoother low-speed control.
 
 ## Configuration
 
@@ -27,8 +27,9 @@ contains an `aim` section:
 Only a subset of options is shown above. Missing keys are filled with defaults.
 
 By default, Aim Mode listens to the `mouse4` button (commonly the back side
-button on modern mice) and applies a slowdown scale of `0.1`. Aliases such as
-`mouse_back` or simply `back` are also understood.
+button on modern mice) and applies a slowdown scale of `0.1` to the system
+pointer speed. Aliases such as `mouse_back` or simply `back` are also
+understood.
 
 ## CLI
 
@@ -39,7 +40,7 @@ python run.py --aim-status        # print current configuration
 python run.py --aim enable        # enable Aim Mode
 python run.py --aim disable       # disable Aim Mode
 python run.py --aim-set scale=0.5 # set new parameters
-python run.py --aim-test          # interactive scaling test
+python run.py --aim-test          # interactive speed test
 ```
 
 ## Warning
