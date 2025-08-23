@@ -16,6 +16,7 @@ This is an alternative control system for Mortal Online 2 using the Chakram X mo
 - [Training Mode](#training-mode)
 - [Configuration](#configuration)
 - [Input System](#input-system)
+- [Aim Mode](#aim-mode)
 - [Troubleshooting](#troubleshooting)
 - [Compatibility](#compatibility)
 - [Contributing](#contributing)
@@ -304,6 +305,21 @@ python test_interception_comprehensive.py
 ```
 
 This will launch an interactive test menu that allows you to test all aspects of the input system, including keyboard input, mouse buttons, key sequences, and sector changes.
+
+## Aim Mode
+
+Aim Mode provides a temporary precision mode by slowing mouse movement and optionally
+auto-holding the left mouse button. Configuration lives in
+`~/.chakram_controller/config.json` under the `aim` section and can be adjusted via
+command line:
+
+```bash
+python run.py --aim-status        # show current settings
+python run.py --aim enable        # enable Aim Mode
+python run.py --aim-set scale=0.5 # update parameters
+```
+
+For more details see [docs/AIM_MODE.md](docs/AIM_MODE.md).
 
 ## Troubleshooting
 

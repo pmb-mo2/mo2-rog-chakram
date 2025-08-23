@@ -21,7 +21,20 @@ def main():
     parser.add_argument("--joystick", type=int, help="Specific joystick ID to use")
     parser.add_argument("--config", action="store_true", help="Launch the configuration editor")
     parser.add_argument("--check", action="store_true", help="Run joystick check utility")
+
+    # Aim Mode CLI options
+    try:
+        from src.cli import aim_cli
+
+        aim_cli.add_arguments(parser)
+    except Exception:
+        aim_cli = None  # type: ignore
+
     args = parser.parse_args()
+
+    # Handle Aim Mode related commands before other actions
+    if aim_cli and aim_cli.handle_args(args):
+        return 0
     
     # Check if we should launch the config editor
     if args.config:
