@@ -1,4 +1,4 @@
-"""Core Aim Mode engine handling state and scaling."""
+"""Core Aim Mode engine handling state and mouse speed changes."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 from .config import AimConfig
 from .smoothing import EMA
+from .system import get_mouse_speed, set_mouse_speed
 
 
 @dataclass
@@ -30,8 +31,7 @@ class AimEngine:
         self._owns_lmb = False
         self._ema_x = EMA(cfg.smoothing.alpha)
         self._ema_y = EMA(cfg.smoothing.alpha)
-        self._rem_x = 0.0
-        self._rem_y = 0.0
+        self._orig_speed: int | None = None
 
     # Button handling -------------------------------------------------
     def on_button(self, pressed: bool) -> List[Tuple[str, str]]:
@@ -51,6 +51,16 @@ class AimEngine:
 
         print(f"AimEngine: button {'pressed' if pressed else 'released'}, aiming={self.aiming}")
 
+        if self.aiming and self._orig_speed is None:
+            self._orig_speed = get_mouse_speed()
+            new_speed = max(1, int(self._orig_speed * self.cfg.scale))
+            set_mouse_speed(new_speed)
+            print(f"AimEngine: mouse speed set to {new_speed}")
+        elif not self.aiming and self._orig_speed is not None:
+            set_mouse_speed(self._orig_speed)
+            print(f"AimEngine: mouse speed restored to {self._orig_speed}")
+            self._orig_speed = None
+
         if self.cfg.auto_lmb:
             if self.aiming and not self._owns_lmb:
                 out.append(("LMB", "down"))
@@ -62,31 +72,13 @@ class AimEngine:
                 print("AimEngine: auto LMB up")
         return out
 
-    # Movement scaling ------------------------------------------------
+    # Movement passthrough --------------------------------------------
     def scale_move(self, dx: int, dy: int) -> Tuple[int, int]:
-        """Scale mouse movement according to configuration."""
+        """Return mouse movement, applying smoothing when active."""
         if not (self.enabled and self.aiming):
             return dx, dy
 
-        # Apply smoothing if enabled
         if self.cfg.smoothing.type == "ema":
             dx = int(round(self._ema_x.update(dx)))
             dy = int(round(self._ema_y.update(dy)))
-
-        sx = self.cfg.scale_x if self.cfg.scale_x is not None else self.cfg.scale
-        sy = self.cfg.scale_y if self.cfg.scale_y is not None else self.cfg.scale
-
-        # Accumulate fractional remainders to effectively lower sensitivity
-        self._rem_x += dx * sx
-        self._rem_y += dy * sy
-        fx = int(self._rem_x)
-        fy = int(self._rem_y)
-        self._rem_x -= fx
-        self._rem_y -= fy
-
-        # Ensure minimal step when a scaled movement is emitted
-        if fx != 0 and abs(fx) < self.cfg.min_step:
-            fx = self.cfg.min_step if fx > 0 else -self.cfg.min_step
-        if fy != 0 and abs(fy) < self.cfg.min_step:
-            fy = self.cfg.min_step if fy > 0 else -self.cfg.min_step
-        return fx, fy
+        return dx, dy
