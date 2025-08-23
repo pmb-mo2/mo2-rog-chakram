@@ -3,6 +3,10 @@
 Aim Mode slows down mouse movement and optionally auto-holds the left mouse button.
 It is intended for precise aiming while a chosen activation button is held or toggled.
 
+Internally the engine accumulates scaled mouse deltas to lower the effective
+pointer sensitivity. This avoids jitter from simple integer rounding and makes
+small movements feel smoother when Aim Mode is active.
+
 ## Configuration
 
 The global configuration file lives at `~/.chakram_controller/config.json` and
